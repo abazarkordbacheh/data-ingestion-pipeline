@@ -222,5 +222,14 @@ class DQLQuery:
             f"""{column} IS NULL"""
         )
 
-
-
+    def between(self, column: str, min_value: str, max_value: str) -> str:
+        """"
+        Between condition
+        :param column: Column name
+        :param min_value: Minimum value
+        :param max_value: Maximum value
+        :return: Between condition string
+        """
+        return sqlalchemy.text(
+            f"""{min_value}<={column}>= {max_value}"""
+        )
