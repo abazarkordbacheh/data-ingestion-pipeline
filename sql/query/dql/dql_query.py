@@ -233,3 +233,9 @@ class DQLQuery:
         return sqlalchemy.text(
             f"""{min_value}<={column}>= {max_value}"""
         )
+
+    def conditions(self, list_condition) -> str:
+        return sqlalchemy.text(
+            f"""{list_condition[0]}
+            AND {list_condition[1]}"""
+        )

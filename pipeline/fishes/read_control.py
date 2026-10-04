@@ -1,4 +1,4 @@
-# region modules...
+# ------------------------ modules ------------------------
 
 import os
 from dotenv import load_dotenv
@@ -6,7 +6,7 @@ from sql.query.dql.dql_query import DQLQuery
 from src.extract.sql_extractor import get_max_id
 from src.connection.sql_connection import SQLConnection
 
-# endregion
+# ------------------------ read_control ------------------------
 def read_control():
     # ------------------------ .env file ------------------------
     load_dotenv()

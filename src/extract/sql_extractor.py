@@ -35,3 +35,17 @@ def get_max_id(connection: SQLConnection, query: str) -> int:
         if max_id is None:
             max_id = 0
         return max_id
+
+
+def get_total_count(connection: SQLConnection, query: str) -> int:
+    """
+    Get total count from SQL Server
+    :param connection: SQL connection
+    :param query: SQL query
+    :return: Int total count
+    """
+    with connection.engine.connect() as connection:
+        total_count = int(connection.execute(query).fetchone()[0])
+        if total_count is None:
+            total_count = 0
+        return total_count
