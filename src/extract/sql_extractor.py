@@ -1,6 +1,7 @@
 from typing import Generator
 from src.connection.sql_connection import SQLConnection
 import pandas as pd
+import sqlalchemy
 
 
 def extract(connection: SQLConnection, query: str, chunk_size: int) -> Generator[pd.DataFrame | None]:
@@ -30,7 +31,7 @@ def get_max_id(connection: SQLConnection, query: str) -> int:
     :return: Int max id
     """
     with connection.engine.connect() as connection:
-        max_id = int(connection.execute(query).fetchone()[0])
+        max_id = int(connection.execute(sqlalchemy.text(query)).fetchone()[0])
         if max_id is None:
             max_id = 0
         return max_id
