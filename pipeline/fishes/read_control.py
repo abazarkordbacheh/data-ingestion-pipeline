@@ -21,7 +21,7 @@ def read_control():
     PRIMARY_KEY = os.getenv("CONTROL_FISHES_PRIMARY_KEY")
 
     # ------------------------ connection ------------------------
-    sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE, SCHEMA)
+    sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE)
     sql_connection.connect()
 
     # ------------------------ Generate query ------------------------

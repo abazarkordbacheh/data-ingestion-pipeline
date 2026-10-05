@@ -64,12 +64,12 @@ def final_table():
     query = dql_query.query
 
     total_dql_query = DQLQuery(SOURCE_FISHES_DATABASE, SOURCE_FISHES_SCHEMA, SOURCE_FISHES_TABLE)
-    dql_query.select(["COUNT(*)"])
+    total_dql_query.select(["COUNT(*)"])
     condition_1 = total_dql_query.greater_than(SOURCE_FISHES_PRIMARY_KEY, max_id)
     condition_2 = total_dql_query.equal("IS_MASTER", "1")
     conditions = total_dql_query.conditions([condition_1, condition_2])
-    dql_query.where(conditions)
-    total_query = dql_query.query
+    total_dql_query.where(conditions)
+    total_query = total_dql_query.query
     total_record = get_total_count(source_sql_connection,total_query)
 
     CHUNK_SIZE = 200
@@ -91,5 +91,3 @@ def final_table():
             print(chunk)
             # pd.merge(chunk,df,"left","")
 
-
-final_table()
