@@ -1,7 +1,9 @@
 # ------------------------ modules ------------------------
-
+# ------------------------ modules ------------------------
+# Libraries =>
 import os
 from dotenv import load_dotenv
+# Modules =>
 from sql.query.dql.dql_query import DQLQuery
 from src.extract.sql_extractor import get_max_id
 from src.connection.sql_connection import SQLConnection

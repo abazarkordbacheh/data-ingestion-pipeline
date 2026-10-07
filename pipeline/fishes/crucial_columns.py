@@ -1,0 +1,1 @@
+CRUCIAL_COLUMNS = []

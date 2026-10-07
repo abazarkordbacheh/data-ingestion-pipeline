@@ -7,19 +7,20 @@ from sql.query.dql.dql_query import DQLQuery
 from src.extract.sql_extractor import get_max_id
 from src.connection.sql_connection import SQLConnection
 
+
 # ------------------------ read_control ------------------------
 def read_control():
     # ------------------------ .env file ------------------------
     load_dotenv()
 
-    HOST = os.getenv("CONTROL_CODING_HOST")
-    PORT = os.getenv("CONTROL_CODING_PORT")
-    USER = os.getenv("CONTROL_CODING_USER")
-    PASSWORD = os.getenv("CONTROL_CODING_PASSWORD")
-    DATABASE = os.getenv("CONTROL_CODING_DATABASE")
-    SCHEMA = os.getenv("CONTROL_CODING_SCHEMA")
-    TABLE = os.getenv("CONTROL_CODING_TABLE")
-    PRIMARY_KEY = os.getenv("CONTROL_CODING_PRIMARY_KEY")
+    HOST = os.getenv("TARGET_BANK_HOST")
+    PORT = os.getenv("TARGET_BANK_PORT")
+    USER = os.getenv("TARGET_BANK__USER")
+    PASSWORD = os.getenv("TARGET_BANK_PASSWORD")
+    DATABASE = os.getenv("TARGET_BANK_DATABASE")
+    SCHEMA = os.getenv("TARGET_BANK_SCHEMA")
+    TABLE = os.getenv("TARGET_BANK_TABLE")
+    PRIMARY_KEY = os.getenv("TARGET_BANK_PRIMARY_KEY")
 
     # ------------------------ connection ------------------------
     sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE)
@@ -31,6 +32,6 @@ def read_control():
     query = dql_query.query
 
     # ------------------------ Get max id ------------------------
-    max_id = get_max_id(sql_connection,query)
+    max_id = get_max_id(sql_connection, query)
 
     return max_id

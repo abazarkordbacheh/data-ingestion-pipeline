@@ -12,14 +12,14 @@ def read_control():
     # ------------------------ .env file ------------------------
     load_dotenv()
 
-    HOST = os.getenv("CONTROL_CODING_HOST")
-    PORT = os.getenv("CONTROL_CODING_PORT")
-    USER = os.getenv("CONTROL_CODING_USER")
-    PASSWORD = os.getenv("CONTROL_CODING_PASSWORD")
-    DATABASE = os.getenv("CONTROL_CODING_DATABASE")
-    SCHEMA = os.getenv("CONTROL_CODING_SCHEMA")
-    TABLE = os.getenv("CONTROL_CODING_TABLE")
-    PRIMARY_KEY = os.getenv("CONTROL_CODING_PRIMARY_KEY")
+    HOST = os.getenv("TARGET_BRANCH_HOST")
+    PORT = os.getenv("TARGET_BRANCH_PORT")
+    USER = os.getenv("TARGET_BRANCH_USER")
+    PASSWORD = os.getenv("TARGET_BRANCH_PASSWORD")
+    DATABASE = os.getenv("TARGET_BRANCH_DATABASE")
+    SCHEMA = os.getenv("TARGET_BRANCH_SCHEMA")
+    TABLE = os.getenv("TARGET_BRANCH_TABLE")
+    PRIMARY_KEY = os.getenv("TARGET_BRANCH_PRIMARY_KEY")
 
     # ------------------------ connection ------------------------
     sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE)

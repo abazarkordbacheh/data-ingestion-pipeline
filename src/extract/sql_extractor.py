@@ -4,6 +4,19 @@ import pandas as pd
 import sqlalchemy
 
 
+def full_extract(connection: SQLConnection, query: str) -> pd.DataFrame | None:
+    """
+    Extract data from SQL Server
+    :param connection: SQL connection
+    :param query: SQL query
+    :param chunk_size: Chunk size
+    :return: DataFrames or None
+    """
+    with connection.engine.connect() as connection:
+        result = connection.execute(query).fetchall()
+        return pd.DataFrame(result)
+
+
 def extract(connection: SQLConnection, query: str, chunk_size: int) -> Generator[pd.DataFrame | None]:
     """
     Extract data from SQL Server
