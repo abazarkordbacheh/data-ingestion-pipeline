@@ -1,6 +1,7 @@
 # ------------------------ modules ------------------------
 # Libraries =>
 import os
+import pandas as pd
 from dotenv import load_dotenv
 # Modules =>
 from sql.query.dql.dql_query import DQLQuery
@@ -8,7 +9,7 @@ from src.extract.sql_extractor import full_extract
 from src.connection.sql_connection import SQLConnection
 
 
-def read_corespondent_table():
+def read_corespondent_table(min_id:int, max_id:int)->pd.DataFrame:
     # ------------------------ .env file ------------------------
     load_dotenv()
 
@@ -31,6 +32,8 @@ def read_corespondent_table():
     corespondent_banks_dql_query = DQLQuery(TARGET_CORESPONDENT_BANKS_DATABASE, TARGET_CORESPONDENT_BANKS_SCHEMA,
                                             TARGET_CORESPONDENT_BANKS_TABLE)
     corespondent_banks_dql_query.select(None)
+    condition = corespondent_banks_dql_query.between("CODING_ID", min_id, max_id)
+    corespondent_banks_dql_query.where(condition)
     corespondent_banks_dql_query = corespondent_banks_dql_query.build()
 
     return full_extract(target_sql_connection, corespondent_banks_dql_query)

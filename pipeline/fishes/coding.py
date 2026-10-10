@@ -1,6 +1,7 @@
 # ------------------------ modules ------------------------
 # Libraries =>
 import os
+import pandas as pd
 from dotenv import load_dotenv
 # Modules =>
 from sql.query.dql.dql_query import DQLQuery
@@ -8,7 +9,7 @@ from src.extract.sql_extractor import full_extract
 from src.connection.sql_connection import SQLConnection
 
 
-def read_coding_table():
+def read_coding_table() -> pd.DataFrame:
     # ------------------------ .env file ------------------------
     load_dotenv()
 
@@ -32,5 +33,3 @@ def read_coding_table():
     coding_dql_query = coding_dql_query.build()
 
     return full_extract(target_sql_connection, coding_dql_query)
-
-

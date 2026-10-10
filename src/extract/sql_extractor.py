@@ -50,6 +50,20 @@ def get_max_id(connection: SQLConnection, query: str) -> int:
         return max_id
 
 
+def gte_min_id(connection: SQLConnection, query: str) -> int:
+    """
+    Get min id from SQL Server
+    :param connection: SQL connection
+    :param query: SQL query
+    :return: Int min id
+    """
+    with connection.engine.connect() as connection:
+        min_id = int(connection.execute(sqlalchemy.text(query)).fetchone()[0])
+        if min_id is None:
+            min_id = 0
+            return min_id
+
+
 def get_total_count(connection: SQLConnection, query: str) -> int:
     """
     Get total count from SQL Server
