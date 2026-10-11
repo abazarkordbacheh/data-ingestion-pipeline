@@ -36,8 +36,8 @@ def final_table():
     TARGET_CORESPONDENT_BANKS_PRIMARY_KEY = os.getenv("TARGET_CORESPONDENT_BANKS_PRIMARY_KEY")
 
     # ------------------------ Get Max ID ------------------------
-    # max_id = read_control()
-    max_id = 0
+    max_id = read_control()
+    # max_id = 0
 
     # ------------------------ connection ------------------------
     source_sql_connection = SQLConnection(
@@ -56,14 +56,15 @@ def final_table():
     target_sql_connection.connect()
 
     # ------------------------ Generate query ------------------------
-    dql_query = DQLQuery(SOURCE_CORESPONDENT_BANKS_DATABASE, SOURCE_CORESPONDENT_BANKS_SCHEMA, SOURCE_CORESPONDENT_BANKS_TABLE)
+    dql_query = DQLQuery(SOURCE_CORESPONDENT_BANKS_DATABASE, SOURCE_CORESPONDENT_BANKS_SCHEMA,
+                         SOURCE_CORESPONDENT_BANKS_TABLE)
     dql_query.select(None)
     conditions = dql_query.greater_than(SOURCE_CORESPONDENT_BANKS_PRIMARY_KEY, max_id)
     dql_query.where(conditions)
     query = dql_query.query
-    print(query)
 
-    total_dql_query = DQLQuery(SOURCE_CORESPONDENT_BANKS_DATABASE, SOURCE_CORESPONDENT_BANKS_SCHEMA, SOURCE_CORESPONDENT_BANKS_TABLE)
+    total_dql_query = DQLQuery(SOURCE_CORESPONDENT_BANKS_DATABASE, SOURCE_CORESPONDENT_BANKS_SCHEMA,
+                               SOURCE_CORESPONDENT_BANKS_TABLE)
     total_dql_query.select(["COUNT(*)"])
     conditions = total_dql_query.greater_than(SOURCE_CORESPONDENT_BANKS_PRIMARY_KEY, max_id)
     total_dql_query.where(conditions)
@@ -88,3 +89,6 @@ def final_table():
         chunk["insert_time2"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
         load(chunk, target_sql_connection, TARGET_CORESPONDENT_BANKS_TABLE, TARGET_CORESPONDENT_BANKS_SCHEMA)
 
+
+if __name__ == "__main__":
+    final_table()

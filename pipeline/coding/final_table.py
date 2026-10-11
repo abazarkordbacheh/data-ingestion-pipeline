@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Modules =>
 from src.load.loader import load
 from sql.query.dql.dql_query import DQLQuery
-from pipeline.coding.read_control import read_control
+from pipeline.bransh.read_control import read_control
 from src.connection.sql_connection import SQLConnection
 from src.extract.sql_extractor import extract, get_total_count
 
@@ -36,14 +36,14 @@ def final_table():
     TARGET_CODING_PRIMARY_KEY = os.getenv("TARGET_CODING_PRIMARY_KEY")
 
     # ------------------------ Get Max ID ------------------------
-    # max_id = read_control()
-    max_id = 0
+    max_id = read_control()
+    # max_id = 0
 
     # ------------------------ connection ------------------------
     source_sql_connection = SQLConnection(
         SOURCE_CODING_HOST, SOURCE_CODING_PORT,
         SOURCE_CODING_USERNAME, SOURCE_CODING_PASSWORD,
-        SOURCE_CODING_DATABASE, True,
+        SOURCE_CODING_DATABASE, False,
     )
 
     target_sql_connection = SQLConnection(
@@ -61,7 +61,6 @@ def final_table():
     conditions = dql_query.greater_than(SOURCE_CODING_PRIMARY_KEY, max_id)
     dql_query.where(conditions)
     query = dql_query.query
-    print(query)
 
     total_dql_query = DQLQuery(SOURCE_CODING_DATABASE, SOURCE_CODING_SCHEMA, SOURCE_CODING_TABLE)
     total_dql_query.select(["COUNT(*)"])
@@ -87,3 +86,7 @@ def final_table():
                       smoothing=0.3):
         chunk["insert_time2"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
         load(chunk, target_sql_connection, TARGET_CODING_TABLE, TARGET_CODING_SCHEMA)
+
+
+if __name__ == "__main__":
+    final_table()

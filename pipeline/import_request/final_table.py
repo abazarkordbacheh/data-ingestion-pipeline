@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 # Modules =>
 from src.load.loader import load
 from sql.query.dql.dql_query import DQLQuery
-from pipeline.coding.read_control import read_control
+from pipeline.import_request.read_control import read_control
 from src.connection.sql_connection import SQLConnection
 from src.extract.sql_extractor import extract, get_total_count
 
@@ -36,8 +36,8 @@ def final_table():
     TARGET_IMPORT_REQUEST_ORGANIZATION_PRIMARY_KEY = os.getenv("TARGET_IMPORT_REQUEST_ORGANIZATION_PRIMARY_KEY")
 
     # ------------------------ Get Max ID ------------------------
-    # max_id = read_control()
-    max_id = 0
+    max_id = read_control()
+    # max_id = 0
 
     # ------------------------ connection ------------------------
     source_sql_connection = SQLConnection(
@@ -56,14 +56,15 @@ def final_table():
     target_sql_connection.connect()
 
     # ------------------------ Generate query ------------------------
-    dql_query = DQLQuery(SOURCE_IMPORT_REQUEST_ORGANIZATION_DATABASE, SOURCE_IMPORT_REQUEST_ORGANIZATION_SCHEMA, SOURCE_IMPORT_REQUEST_ORGANIZATION_TABLE)
+    dql_query = DQLQuery(SOURCE_IMPORT_REQUEST_ORGANIZATION_DATABASE, SOURCE_IMPORT_REQUEST_ORGANIZATION_SCHEMA,
+                         SOURCE_IMPORT_REQUEST_ORGANIZATION_TABLE)
     dql_query.select(None)
     conditions = dql_query.greater_than(SOURCE_IMPORT_REQUEST_ORGANIZATION_PRIMARY_KEY, max_id)
     dql_query.where(conditions)
     query = dql_query.query
-    print(query)
 
-    total_dql_query = DQLQuery(SOURCE_IMPORT_REQUEST_ORGANIZATION_DATABASE, SOURCE_IMPORT_REQUEST_ORGANIZATION_SCHEMA, SOURCE_IMPORT_REQUEST_ORGANIZATION_TABLE)
+    total_dql_query = DQLQuery(SOURCE_IMPORT_REQUEST_ORGANIZATION_DATABASE, SOURCE_IMPORT_REQUEST_ORGANIZATION_SCHEMA,
+                               SOURCE_IMPORT_REQUEST_ORGANIZATION_TABLE)
     total_dql_query.select(["COUNT(*)"])
     conditions = total_dql_query.greater_than(SOURCE_IMPORT_REQUEST_ORGANIZATION_PRIMARY_KEY, max_id)
     total_dql_query.where(conditions)
@@ -86,4 +87,9 @@ def final_table():
                       ),
                       smoothing=0.3):
         chunk["insert_time2"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
-        load(chunk, target_sql_connection, TARGET_IMPORT_REQUEST_ORGANIZATION_TABLE, TARGET_IMPORT_REQUEST_ORGANIZATION_SCHEMA)
+        load(chunk, target_sql_connection, TARGET_IMPORT_REQUEST_ORGANIZATION_TABLE,
+             TARGET_IMPORT_REQUEST_ORGANIZATION_SCHEMA)
+
+
+if __name__ == "__main__":
+    final_table()

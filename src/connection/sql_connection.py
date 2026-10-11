@@ -1,4 +1,5 @@
 from src.connection.base import BaseConnection
+import urllib.parse
 import sqlalchemy
 import pymssql
 
@@ -41,14 +42,22 @@ class SQLConnection(BaseConnection):
         :return: None
         """
         if self.windows_authentication:
-            connection_string = f"mssql+pymssql://{self.host}:{self.port}/{self.database}"
-            self.engine = sqlalchemy.create_engine(connection_string)
-        else:
-            connection_string = (
-                f"mssql+pymssql://{self.user}:{self.password}"
-                f"@{self.host}:{self.port}/{self.database}"
+            url = sqlalchemy.engine.URL.create(
+                drivername="mssql+pymssql",
+                host=self.host,
+                port=self.port,
+                database=self.database,
             )
-            self.engine = sqlalchemy.create_engine(connection_string)
+        else:
+            url = sqlalchemy.engine.URL.create(
+                drivername="mssql+pymssql",
+                username=self.user,
+                password=self.password,
+                host=self.host,
+                port=self.port,
+                database=self.database,
+            )
+        self.engine = sqlalchemy.create_engine(url)
 
     def disconnect(self) -> None:
         """

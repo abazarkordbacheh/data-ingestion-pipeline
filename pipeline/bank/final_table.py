@@ -17,7 +17,7 @@ def final_table():
     # ------------------------ .env file ------------------------
     load_dotenv()
     # Source =>
-    SOURCE_BANK_HOST = os.getenv("BANK_HOST")
+    SOURCE_BANK_HOST = os.getenv("SOURCE_BANK_HOST")
     SOURCE_BANK_PORT = int(os.getenv("SOURCE_BANK_PORT"))
     SOURCE_BANK_USERNAME = os.getenv("SOURCE_BANK_USERNAME")
     SOURCE_BANK_PASSWORD = os.getenv("SOURCE_BANK_PASSWORD")
@@ -36,14 +36,14 @@ def final_table():
     TARGET_BANK_PRIMARY_KEY = os.getenv("TARGET_BANK_PRIMARY_KEY")
 
     # ------------------------ Get Max ID ------------------------
-    # max_id = read_control()
-    max_id = 0
+    max_id = read_control()
+    # max_id = 0
 
     # ------------------------ connection ------------------------
     source_sql_connection = SQLConnection(
         SOURCE_BANK_HOST, SOURCE_BANK_PORT,
         SOURCE_BANK_USERNAME, SOURCE_BANK_PASSWORD,
-        SOURCE_BANK_DATABASE, True,
+        SOURCE_BANK_DATABASE, False,
     )
 
     target_sql_connection = SQLConnection(
@@ -61,7 +61,6 @@ def final_table():
     conditions = dql_query.greater_than(SOURCE_BANK_PRIMARY_KEY, max_id)
     dql_query.where(conditions)
     query = dql_query.query
-    print(query)
 
     total_dql_query = DQLQuery(SOURCE_BANK_DATABASE, SOURCE_BANK_SCHEMA, SOURCE_BANK_TABLE)
     total_dql_query.select(["COUNT(*)"])
@@ -87,3 +86,7 @@ def final_table():
                       smoothing=0.3):
         chunk["insert_time2"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
         load(chunk, target_sql_connection, TARGET_BANK_TABLE, TARGET_BANK_SCHEMA)
+
+
+if __name__ == "__main__":
+    final_table()
