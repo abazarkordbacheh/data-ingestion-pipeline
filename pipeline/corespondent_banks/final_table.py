@@ -6,54 +6,79 @@ from tqdm.auto import tqdm
 from dotenv import load_dotenv
 # Modules =>
 from src.load.loader import load
+from src.transform.log import log_decorator
 from sql.query.dql.dql_query import DQLQuery
 from src.connection.sql_connection import SQLConnection
 from src.extract.sql_extractor import extract, get_total_count
 from pipeline.corespondent_banks.read_control import read_control
 
+# ------------------------ .env file ------------------------
+load_dotenv()
+# Source =>
+SOURCE_CORESPONDENT_BANKS_HOST = os.getenv("SOURCE_CORESPONDENT_BANKS_HOST")
+SOURCE_CORESPONDENT_BANKS_PORT = int(os.getenv("SOURCE_CORESPONDENT_BANKS_PORT"))
+SOURCE_CORESPONDENT_BANKS_USERNAME = os.getenv("SOURCE_CORESPONDENT_BANKS_USERNAME")
+SOURCE_CORESPONDENT_BANKS_PASSWORD = os.getenv("SOURCE_CORESPONDENT_BANKS_PASSWORD")
+SOURCE_CORESPONDENT_BANKS_DATABASE = os.getenv("SOURCE_CORESPONDENT_BANKS_DATABASE")
+SOURCE_CORESPONDENT_BANKS_SCHEMA = os.getenv("SOURCE_CORESPONDENT_BANKS_SCHEMA")
+SOURCE_CORESPONDENT_BANKS_TABLE = os.getenv("SOURCE_CORESPONDENT_BANKS_TABLE")
+SOURCE_CORESPONDENT_BANKS_PRIMARY_KEY = os.getenv("SOURCE_CORESPONDENT_BANKS_PRIMARY_KEY")
+# Target =>
+TARGET_CORESPONDENT_BANKS_HOST = os.getenv("TARGET_CORESPONDENT_BANKS_HOST")
+TARGET_CORESPONDENT_BANKS_PORT = int(os.getenv("TARGET_CORESPONDENT_BANKS_PORT"))
+TARGET_CORESPONDENT_BANKS_USERNAME = os.getenv("TARGET_CORESPONDENT_BANKS_USERNAME")
+TARGET_CORESPONDENT_BANKS_PASSWORD = os.getenv("TARGET_CORESPONDENT_BANKS_PASSWORD")
+TARGET_CORESPONDENT_BANKS_DATABASE = os.getenv("TARGET_CORESPONDENT_BANKS_DATABASE")
+TARGET_CORESPONDENT_BANKS_SCHEMA = os.getenv("TARGET_CORESPONDENT_BANKS_SCHEMA")
+TARGET_CORESPONDENT_BANKS_TABLE = os.getenv("TARGET_CORESPONDENT_BANKS_TABLE")
+TARGET_CORESPONDENT_BANKS_PRIMARY_KEY = os.getenv("TARGET_CORESPONDENT_BANKS_PRIMARY_KEY")
+# Log =>
+LOG_HOST = os.getenv("LOG_HOST")
+LOG_PORT = int(os.getenv("LOG_PORT"))
+LOG_USERNAME = os.getenv("LOG_USERNAME")
+LOG_PASSWORD = os.getenv("LOG_PASSWORD")
+LOG_DATABASE = os.getenv("LOG_DATABASE")
+LOG_SCHEMA = os.getenv("LOG_SCHEMA")
+LOG_TABLE = os.getenv("LOG_TABLE")
+
+# ------------------------ connection ------------------------
+source_sql_connection = SQLConnection(
+    SOURCE_CORESPONDENT_BANKS_HOST, SOURCE_CORESPONDENT_BANKS_PORT,
+    SOURCE_CORESPONDENT_BANKS_USERNAME, SOURCE_CORESPONDENT_BANKS_PASSWORD,
+    SOURCE_CORESPONDENT_BANKS_DATABASE, True,
+)
+
+target_sql_connection = SQLConnection(
+    TARGET_CORESPONDENT_BANKS_HOST, TARGET_CORESPONDENT_BANKS_PORT,
+    TARGET_CORESPONDENT_BANKS_USERNAME, TARGET_CORESPONDENT_BANKS_PASSWORD,
+    TARGET_CORESPONDENT_BANKS_DATABASE, True,
+)
+
+log_sql_connection = SQLConnection(
+    LOG_HOST, LOG_PORT,
+    LOG_USERNAME, LOG_PASSWORD,
+    LOG_DATABASE, True,
+)
+
+source_sql_connection.connect()
+target_sql_connection.connect()
+log_sql_connection.connect()
+
 
 # ------------------------ final_table ------------------------
+@log_decorator(
+    source_table_name=SOURCE_CORESPONDENT_BANKS_TABLE,
+    target_table_name=TARGET_CORESPONDENT_BANKS_TABLE,
+    source_schema_name=SOURCE_CORESPONDENT_BANKS_SCHEMA,
+    target_schema_name=TARGET_CORESPONDENT_BANKS_SCHEMA,
+    source_engine=source_sql_connection.engine,
+    target_engine=target_sql_connection.engine,
+    log_engine=log_sql_connection.engine
+)
 def final_table():
-    # ------------------------ .env file ------------------------
-    load_dotenv()
-    # Source =>
-    SOURCE_CORESPONDENT_BANKS_HOST = os.getenv("SOURCE_CORESPONDENT_BANKS_HOST")
-    SOURCE_CORESPONDENT_BANKS_PORT = int(os.getenv("SOURCE_CORESPONDENT_BANKS_PORT"))
-    SOURCE_CORESPONDENT_BANKS_USERNAME = os.getenv("SOURCE_CORESPONDENT_BANKS_USERNAME")
-    SOURCE_CORESPONDENT_BANKS_PASSWORD = os.getenv("SOURCE_CORESPONDENT_BANKS_PASSWORD")
-    SOURCE_CORESPONDENT_BANKS_DATABASE = os.getenv("SOURCE_CORESPONDENT_BANKS_DATABASE")
-    SOURCE_CORESPONDENT_BANKS_SCHEMA = os.getenv("SOURCE_CORESPONDENT_BANKS_SCHEMA")
-    SOURCE_CORESPONDENT_BANKS_TABLE = os.getenv("SOURCE_CORESPONDENT_BANKS_TABLE")
-    SOURCE_CORESPONDENT_BANKS_PRIMARY_KEY = os.getenv("SOURCE_CORESPONDENT_BANKS_PRIMARY_KEY")
-    # Target =>
-    TARGET_CORESPONDENT_BANKS_HOST = os.getenv("TARGET_CORESPONDENT_BANKS_HOST")
-    TARGET_CORESPONDENT_BANKS_PORT = int(os.getenv("TARGET_CORESPONDENT_BANKS_PORT"))
-    TARGET_CORESPONDENT_BANKS_USERNAME = os.getenv("TARGET_CORESPONDENT_BANKS_USERNAME")
-    TARGET_CORESPONDENT_BANKS_PASSWORD = os.getenv("TARGET_CORESPONDENT_BANKS_PASSWORD")
-    TARGET_CORESPONDENT_BANKS_DATABASE = os.getenv("TARGET_CORESPONDENT_BANKS_DATABASE")
-    TARGET_CORESPONDENT_BANKS_SCHEMA = os.getenv("TARGET_CORESPONDENT_BANKS_SCHEMA")
-    TARGET_CORESPONDENT_BANKS_TABLE = os.getenv("TARGET_CORESPONDENT_BANKS_TABLE")
-    TARGET_CORESPONDENT_BANKS_PRIMARY_KEY = os.getenv("TARGET_CORESPONDENT_BANKS_PRIMARY_KEY")
-
     # ------------------------ Get Max ID ------------------------
     max_id = read_control()
     # max_id = 0
-
-    # ------------------------ connection ------------------------
-    source_sql_connection = SQLConnection(
-        SOURCE_CORESPONDENT_BANKS_HOST, SOURCE_CORESPONDENT_BANKS_PORT,
-        SOURCE_CORESPONDENT_BANKS_USERNAME, SOURCE_CORESPONDENT_BANKS_PASSWORD,
-        SOURCE_CORESPONDENT_BANKS_DATABASE, True,
-    )
-
-    target_sql_connection = SQLConnection(
-        TARGET_CORESPONDENT_BANKS_HOST, TARGET_CORESPONDENT_BANKS_PORT,
-        TARGET_CORESPONDENT_BANKS_USERNAME, TARGET_CORESPONDENT_BANKS_PASSWORD,
-        TARGET_CORESPONDENT_BANKS_DATABASE, True,
-    )
-
-    source_sql_connection.connect()
-    target_sql_connection.connect()
 
     # ------------------------ Generate query ------------------------
     dql_query = DQLQuery(SOURCE_CORESPONDENT_BANKS_DATABASE, SOURCE_CORESPONDENT_BANKS_SCHEMA,

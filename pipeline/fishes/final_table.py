@@ -7,6 +7,7 @@ from tqdm.auto import tqdm
 from dotenv import load_dotenv
 # Modules =>
 from fishes_type import FISHES_TYPE
+from src.transform.log import log_decorator
 from sql.query.dql.dql_query import DQLQuery
 from src.transform.join import join_dataframe
 from pipeline.fishes.bank import read_bank_table
@@ -23,50 +24,74 @@ from src.validation.crucial_cols import filter_any_null, filter_all_not_null
 from src.transform.maping import classify_source, classify_ministry, classify_device
 from pipeline.fishes.import_request_organization import read_import_request_organization_table
 
+# ------------------------ .env file ------------------------
+global coding_df
+load_dotenv()
+# Source =>
+SOURCE_FISHES_HOST = os.getenv("SOURCE_FISHES_HOST")
+SOURCE_FISHES_PORT = int(os.getenv("SOURCE_FISHES_PORT"))
+SOURCE_FISHES_USERNAME = os.getenv("SOURCE_FISHES_USERNAME")
+SOURCE_FISHES_PASSWORD = os.getenv("SOURCE_FISHES_PASSWORD")
+SOURCE_FISHES_DATABASE = os.getenv("SOURCE_FISHES_DATABASE")
+SOURCE_FISHES_SCHEMA = os.getenv("SOURCE_FISHES_SCHEMA")
+SOURCE_FISHES_TABLE = os.getenv("SOURCE_FISHES_TABLE")
+SOURCE_FISHES_PRIMARY_KEY = os.getenv("SOURCE_FISHES_PRIMARY_KEY")
+
+# Target =>
+# FISHES
+TARGET_FISHES_HOST = os.getenv("TARGET_FISHES_HOST")
+TARGET_FISHES_PORT = int(os.getenv("TARGET_FISHES_PORT"))
+TARGET_FISHES_USERNAME = os.getenv("TARGET_FISHES_USERNAME")
+TARGET_FISHES_PASSWORD = os.getenv("TARGET_FISHES_PASSWORD")
+TARGET_FISHES_DATABASE = os.getenv("TARGET_FISHES_DATABASE")
+TARGET_FISHES_SCHEMA = os.getenv("TARGET_FISHES_SCHEMA")
+TARGET_FISHES_TABLE = os.getenv("TARGET_FISHES_TABLE")
+TARGET_FISHES_PRIMARY_KEY = os.getenv("TARGET_FISHES_PRIMARY_KEY")
+# Log =>
+LOG_HOST = os.getenv("LOG_HOST")
+LOG_PORT = int(os.getenv("LOG_PORT"))
+LOG_USERNAME = os.getenv("LOG_USERNAME")
+LOG_PASSWORD = os.getenv("LOG_PASSWORD")
+LOG_DATABASE = os.getenv("LOG_DATABASE")
+LOG_SCHEMA = os.getenv("LOG_SCHEMA")
+LOG_TABLE = os.getenv("LOG_TABLE")
+
+# ------------------------ connection ------------------------
+source_sql_connection = SQLConnection(
+    SOURCE_FISHES_HOST, SOURCE_FISHES_PORT,
+    SOURCE_FISHES_USERNAME, SOURCE_FISHES_PASSWORD
+)
+
+target_sql_connection = SQLConnection(
+    TARGET_FISHES_HOST, TARGET_FISHES_PORT,
+    TARGET_FISHES_USERNAME, TARGET_FISHES_PASSWORD
+)
+
+log_sql_connection = SQLConnection(
+    LOG_HOST, LOG_PORT,
+    LOG_USERNAME, LOG_PASSWORD,
+    LOG_DATABASE, True,
+)
+
+source_sql_connection.connect()
+target_sql_connection.connect()
+log_sql_connection.connect()
+
 
 # ------------------------ final_table ------------------------
-
+@log_decorator(
+    source_table_name=SOURCE_FISHES_TABLE,
+    target_table_name=TARGET_FISHES_TABLE,
+    source_schema_name=SOURCE_FISHES_SCHEMA,
+    target_schema_name=TARGET_FISHES_SCHEMA,
+    source_engine=source_sql_connection.engine,
+    target_engine=target_sql_connection.engine,
+    log_engine=log_sql_connection.engine
+)
 def final_table():
-    # ------------------------ .env file ------------------------
-    global coding_df
-    load_dotenv()
-    # Source =>
-    SOURCE_FISHES_HOST = os.getenv("SOURCE_FISHES_HOST")
-    SOURCE_FISHES_PORT = int(os.getenv("SOURCE_FISHES_PORT"))
-    SOURCE_FISHES_USERNAME = os.getenv("SOURCE_FISHES_USERNAME")
-    SOURCE_FISHES_PASSWORD = os.getenv("SOURCE_FISHES_PASSWORD")
-    SOURCE_FISHES_DATABASE = os.getenv("SOURCE_FISHES_DATABASE")
-    SOURCE_FISHES_SCHEMA = os.getenv("SOURCE_FISHES_SCHEMA")
-    SOURCE_FISHES_TABLE = os.getenv("SOURCE_FISHES_TABLE")
-    SOURCE_FISHES_PRIMARY_KEY = os.getenv("SOURCE_FISHES_PRIMARY_KEY")
-
-    # Target =>
-    # FISHES
-    TARGET_FISHES_HOST = os.getenv("TARGET_FISHES_HOST")
-    TARGET_FISHES_PORT = int(os.getenv("TARGET_FISHES_PORT"))
-    TARGET_FISHES_USERNAME = os.getenv("TARGET_FISHES_USERNAME")
-    TARGET_FISHES_PASSWORD = os.getenv("TARGET_FISHES_PASSWORD")
-    TARGET_FISHES_DATABASE = os.getenv("TARGET_FISHES_DATABASE")
-    TARGET_FISHES_SCHEMA = os.getenv("TARGET_FISHES_SCHEMA")
-    TARGET_FISHES_TABLE = os.getenv("TARGET_FISHES_TABLE")
-    TARGET_FISHES_PRIMARY_KEY = os.getenv("TARGET_FISHES_PRIMARY_KEY")
-
     # ------------------------ Get Max ID ------------------------
     fishes_max_id = "0"
     # fishes_max_id = read_control()
-    # ------------------------ connection ------------------------
-    source_sql_connection = SQLConnection(
-        SOURCE_FISHES_HOST, SOURCE_FISHES_PORT,
-        SOURCE_FISHES_USERNAME, SOURCE_FISHES_PASSWORD
-    )
-
-    target_sql_connection = SQLConnection(
-        TARGET_FISHES_HOST, TARGET_FISHES_PORT,
-        TARGET_FISHES_USERNAME, TARGET_FISHES_PASSWORD
-    )
-
-    source_sql_connection.connect()
-    target_sql_connection.connect()
 
     # ------------------------ Generate query ------------------------
     # FISHES =>
