@@ -25,7 +25,6 @@ from src.transform.maping import classify_source, classify_ministry, classify_de
 from pipeline.fishes.import_request_organization import read_import_request_organization_table
 
 # ------------------------ .env file ------------------------
-global coding_df
 load_dotenv()
 # Source =>
 SOURCE_FISHES_HOST = os.getenv("SOURCE_FISHES_HOST")
@@ -281,7 +280,7 @@ def final_table():
             ["IMPORT_REQUEST_ID", "IMPORT_REQUEST_ID"],
             "left"
         )
-
+        del import_request_df
         chunk = join_dataframe(
             chunk,
             import_request_organization_df,
@@ -295,6 +294,7 @@ def final_table():
             ["ORGANIZATION_CODING_ID", "CODING_ID"],
             "left"
         )
+        del import_request_organization_df
         del coding_df
         chunk.drop_duplicates(inplace=True)
         chunk["کد مشتری"] = chunk["کد مشتری"].apply(
@@ -305,4 +305,5 @@ def final_table():
         chunk["محل تامین ارز"] = chunk.apply(classify_source, axis=1)
 
 
-final_table()
+if __name__ == "__min__":
+    final_table()

@@ -1,5 +1,6 @@
 # ------------------------ modules ------------------------
 # Libraries =>
+import re
 import os
 import datetime
 from tqdm.auto import tqdm
@@ -40,6 +41,9 @@ LOG_PASSWORD = os.getenv("LOG_PASSWORD")
 LOG_DATABASE = os.getenv("LOG_DATABASE")
 LOG_SCHEMA = os.getenv("LOG_SCHEMA")
 LOG_TABLE = os.getenv("LOG_TABLE")
+
+# ------------------------ control chars pattern ------------------------
+_CONTROL_CHARS = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
 
 # ------------------------ connection ------------------------
 source_sql_connection = SQLConnection(
@@ -112,6 +116,13 @@ def final_table():
                       ),
                       smoothing=0.3):
         chunk["insert_time2"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+
+        # sanitize: strip non-printable control chars from all string columns
+        for col in chunk.select_dtypes(include='object').columns:
+            chunk[col] = chunk[col].apply(
+                lambda x: _CONTROL_CHARS.sub('', x) if isinstance(x, str) else x
+            )
+
         load(chunk, target_sql_connection, TARGET_IMPORT_REQUEST_ORGANIZATION_TABLE,
              TARGET_IMPORT_REQUEST_ORGANIZATION_SCHEMA)
 
