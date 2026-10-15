@@ -1,27 +1,101 @@
-# app.py - DataPulse Dashboard
 import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
-import sys
-import os
+import sys, os
+import plotly.express as px
+import plotly.graph_objects as go
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.connection.sql_connection import SQLConnection
 
-# ── تنظیمات صفحه ────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="DataPulse | ETL Monitoring",
-    page_icon="📊",
-    layout="wide"
+# ── page config ────────────────────────────────────────────────────────────────
+st.set_page_config(page_title="DataPulse", layout="wide", page_icon="⚡")
+
+# ── CSS ────────────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+}
+
+/* sidebar */
+[data-testid="stSidebar"] {
+    background: #283046 !important;
+    border-right: none !important;
+}
+[data-testid="stSidebar"] * { color: #d0d2d6 !important; }
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 { color: #ffffff !important; }
+[data-testid="stSidebar"] .stButton > button {
+    background: #7367f0 !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    width: 100%;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: #5e50ee !important;
+}
+
+/* main bg */
+.main .block-container {
+    background: #f8f8f8;
+    padding: 2rem;
+    max-width: 1400px;
+}
+
+/* chart wrapper — رنگ پس‌زمینه کارت اینجاست نه توی plotly */
+[data-testid="stPlotlyChart"] > div {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 0.5rem;
+    box-shadow: 0 4px 24px rgba(34, 41, 47, 0.08);
+}
+
+/* dataframe */
+[data-testid="stDataFrame"] {
+    border-radius: 10px;
+    box-shadow: 0 4px 24px rgba(34, 41, 47, 0.08);
+    overflow: hidden;
+}
+
+hr { border-color: #ebe9f1; }
+</style>
+""", unsafe_allow_html=True)
+
+# ── constants ──────────────────────────────────────────────────────────────────
+STATUS_COLORS = {
+    "success": "#28c76f",
+    "failed": "#ea5455",
+    "running": "#7367f0",
+    "pending": "#ff9f43",
+}
+
+CARD_GRADIENTS = [
+    ("linear-gradient(135deg,#7367f0,#9e95f5)", "⚙️"),
+    ("linear-gradient(135deg,#28c76f,#48da89)", "🕐"),
+    ("linear-gradient(135deg,#ff9f43,#ffb976)", "📦"),
+]
+
+# ── تنظیمات پایه چارت‌ها ─────────────────────────────────────────────────────
+# مهم: paper_bgcolor و plot_bgcolor باید rgba(0,0,0,0) باشن
+# تا رنگ کارت از CSS بیاد؛ هیچ‌وقت "white" یا "#fff" نذارید
+BASE_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="Inter", color="#5e5873"),
+    title_x=0.5,
+    title_font=dict(size=14, color="#3d3b8e", family="Inter"),
 )
 
-# ── خواندن environment variables ─────────────────────────────────────────────
+# ── env & connection ───────────────────────────────────────────────────────────
 load_dotenv()
-
 LOG_HOST = os.getenv("LOG_HOST")
-LOG_PORT = int(os.getenv("LOG_PORT"))
+LOG_PORT = int(os.getenv("LOG_PORT", 1433))
 LOG_USERNAME = os.getenv("LOG_USERNAME")
 LOG_PASSWORD = os.getenv("LOG_PASSWORD")
 LOG_DATABASE = os.getenv("LOG_DATABASE")
@@ -29,110 +103,325 @@ LOG_SCHEMA = os.getenv("LOG_SCHEMA", "dbo")
 LOG_TABLE = os.getenv("LOG_TABLE")
 
 
-# ── اتصال به دیتابیس با cache ────────────────────────────────────────────────
 @st.cache_resource
-def get_db_connection():
-    """ایجاد connection pool به SQL Server"""
-    conn = SQLConnection(
-        host=LOG_HOST,
-        port=LOG_PORT,
+def get_conn():
+    load_dotenv()
+    return SQLConnection(
+        host=LOG_HOST, port=LOG_PORT,
+        database=LOG_DATABASE,
         user=LOG_USERNAME,
         password=LOG_PASSWORD,
-        database=LOG_DATABASE,
-        windows_authentication=True
     )
-    conn.connect()
-    return conn
 
 
 @st.cache_data(ttl=60)
-def load_etl_logs():
-    """خواندن جدول ETL logs"""
-    conn = get_db_connection()
-    query = f"SELECT * FROM {LOG_SCHEMA}.{LOG_TABLE} ORDER BY start_time DESC"
-    df = pd.read_sql(query, conn.engine)
-
-    # تبدیل ستون‌های زمانی
-    if 'start_time' in df.columns:
-        df['start_time'] = pd.to_datetime(df['start_time'])
-    if 'end_time' in df.columns:
-        df['end_time'] = pd.to_datetime(df['end_time'])
-
+def load_data() -> pd.DataFrame:
+    conn = get_conn()
+    conn.connect()
+    df = pd.read_sql(
+        f"SELECT * FROM {LOG_SCHEMA}.{LOG_TABLE} ORDER BY start_time DESC",
+        conn.engine,
+    )
+    for col in ("start_time", "end_time"):
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col])
     return df
 
 
-# ── UI ────────────────────────────────────────────────────────────────────────
-st.title("📊 DataPulse — ETL Monitoring Dashboard")
+df_raw = load_data()
 
-try:
-    with st.spinner("در حال بارگذاری داده‌ها..."):
-        df = load_etl_logs()
+# ── sidebar ────────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("## ⚡ DataPulse")
+    st.markdown("---")
 
-    st.success(f"✅ {len(df)} رکورد لود شد")
-
-    # نمایش داده‌های خام
-    with st.expander("🔍 مشاهده داده‌های خام"):
-        st.dataframe(df, use_container_width=True)
-
-    # نمایش اطلاعات ستون‌ها
-    st.subheader("اطلاعات جدول")
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.metric("تعداد رکوردها", len(df))
-        st.metric("تعداد جداول", df['table_name'].nunique() if 'table_name' in df.columns else 0)
-
-    with col2:
-        if 'status' in df.columns:
-            success_count = (df['status'] == 'success').sum()
-            failed_count = (df['status'] == 'failed').sum()
-            st.metric("موفق", success_count)
-            st.metric("ناموفق", failed_count)
-
-except Exception as e:
-    st.error(f"❌ خطا در اتصال به دیتابیس: {e}")
-    st.info("لطفاً مشخصات اتصال در فایل .env را بررسی کنید")
-
-import plotly.express as px
-
-# نمودار دونات بر اساس ستون status
-def render_status_donut(df):
-    status_counts = df['status'].value_counts().reset_index()
-    status_counts.columns = ['status', 'count']
-
-    # رنگ‌بندی بر اساس وضعیت
-    color_map = {
-        'success': '#22c55e',   # سبز
-        'failed':  '#ef4444',   # قرمز
-        'running': '#3b82f6',   # آبی
-        'pending': '#f59e0b',   # نارنجی
-    }
-
-    fig = px.pie(
-        status_counts,
-        names='status',
-        values='count',
-        hole=0.55,
-        color='status',
-        color_discrete_map=color_map,
+    all_tables = sorted(df_raw["table_name"].unique())
+    selected_tables = st.multiselect(
+        "Filter by Table",
+        options=all_tables,
+        default=all_tables,
+        placeholder="All tables",
     )
+    if not selected_tables:
+        st.warning("Select at least one table.")
+        st.stop()
 
-    fig.update_traces(
-        textposition='outside',
-        textinfo='label+percent+value',
-        hovertemplate='<b>%{label}</b><br>تعداد: %{value}<br>درصد: %{percent}<extra></extra>',
-    )
+    st.markdown("---")
+    if st.button("🔄  Refresh data"):
+        st.cache_data.clear()
+        st.rerun()
 
+# ── filtered df ───────────────────────────────────────────────────────────────
+df = df_raw[df_raw["table_name"].isin(selected_tables)].copy()
+
+
+# ── helpers ────────────────────────────────────────────────────────────────────
+def bar_layout(fig: go.Figure, height: int = 340) -> go.Figure:
+    """استایل یکپارچه برای bar chart‌ها"""
     fig.update_layout(
-        title=dict(text='توزیع وضعیت اجرا', font_size=16, x=0.5, xanchor='center'),
-        showlegend=True,
-        legend=dict(orientation='h', yanchor='bottom', y=-0.2, xanchor='center', x=0.5),
-        margin=dict(t=60, b=60, l=20, r=20),
-        height=380,
+        **BASE_LAYOUT,
+        height=height,
+        margin=dict(t=52, b=52, l=52, r=24),
+        xaxis=dict(
+            showgrid=False,
+            automargin=True,
+            tickangle=-30,
+            tickfont=dict(size=11),
+        ),
+        yaxis=dict(
+            gridcolor="#ebe9f1",
+            automargin=True,
+            tickfont=dict(size=11),
+        ),
+        legend=dict(
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+            font=dict(size=11),
+        ),
     )
-
     return fig
 
 
-# داخل بخش UI
-st.plotly_chart(render_status_donut(df), use_container_width=True)
+def line_layout(fig: go.Figure, height: int = 340) -> go.Figure:
+    """استایل یکپارچه برای line chart‌ها با legend خارج"""
+    fig.update_layout(
+        **BASE_LAYOUT,
+        height=height,
+        margin=dict(t=52, b=52, l=52, r=180),  # فضا برای legend
+        xaxis=dict(
+            showgrid=False,
+            automargin=True,
+            tickfont=dict(size=11),
+        ),
+        yaxis=dict(
+            gridcolor="#ebe9f1",
+            automargin=True,
+            tickfont=dict(size=11),
+        ),
+        legend=dict(
+            x=1.02,
+            y=1.0,
+            xanchor="left",
+            yanchor="top",
+            bgcolor="rgba(0,0,0,0)",
+            borderwidth=0,
+            font=dict(size=10),
+        ),
+    )
+    return fig
+
+
+def make_donut(series: pd.Series, title: str, color_map: dict = None) -> go.Figure:
+    """
+    ساخت donut chart با رنگ‌های درست.
+
+    علت سیاه‌شدن قبلی: plotly وقتی color_discrete_map یا
+    color_discrete_sequence نداشته باشه از پالت پیش‌فرض استفاده می‌کنه
+    که گاهی با پس‌زمینه شفاف تداخل داره.
+    اینجا هر بار یه پالت صریح می‌دیم.
+    """
+    counts = series.value_counts().reset_index()
+    counts.columns = ["label", "count"]
+
+    if color_map:
+        # ترتیب رنگ‌ها رو طبق label از color_map بگیر
+        colors = [color_map.get(lbl, "#cccccc") for lbl in counts["label"]]
+    else:
+        # پالت کیفی با تنوع کافی — نه پیش‌فرض plotly
+        palette = [
+            "#7367f0", "#28c76f", "#ff9f43", "#ea5455",
+            "#00cfe8", "#ff6f61", "#6fcf97", "#f2c94c",
+            "#9b51e0", "#eb5757",
+        ]
+        colors = [palette[i % len(palette)] for i in range(len(counts))]
+
+    fig = go.Figure(go.Pie(
+        labels=counts["label"],
+        values=counts["count"],
+        hole=0.55,
+        marker=dict(colors=colors, line=dict(color="#ffffff", width=2)),
+        textposition="outside",
+        textinfo="label+percent",
+        hovertemplate="<b>%{label}</b>: %{value}<extra></extra>",
+    ))
+
+    fig.update_layout(
+        **BASE_LAYOUT,
+        title_text=title,
+        showlegend=False,
+        height=320,
+        margin=dict(t=52, b=60, l=80, r=80),  # فضا برای label خارج از دایره
+    )
+    return fig
+
+
+def kpi_card(gradient: str, icon: str, label: str, value) -> str:
+    return f"""
+    <div style="
+        background: {gradient};
+        border-radius: 10px;
+        padding: 1.4rem 1.6rem;
+        color: #fff;
+        box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    ">
+        <div style="font-size:1.9rem;font-weight:700;line-height:1">{value}</div>
+        <div style="font-size:.85rem;opacity:.9;margin-top:.4rem">{icon} {label}</div>
+    </div>"""
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROW 0 — عنوان
+# ══════════════════════════════════════════════════════════════════════════════
+st.markdown(
+    "<h1 style='font-size:1.6rem;font-weight:700;color:#3d3b8e;"
+    "margin-bottom:.25rem'>DataPulse — ETL Monitor</h1>",
+    unsafe_allow_html=True,
+)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROW 1 — KPI cards
+# ══════════════════════════════════════════════════════════════════════════════
+c1, c2, c3 = st.columns(3)
+
+latest_run = df["start_time"].max()
+latest_str = latest_run.strftime("%Y-%m-%d %H:%M") if pd.notna(latest_run) else "N/A"
+
+kpi_values = [
+    (df["table_name"].nunique(), "Distinct Tables"),
+    (latest_str, "Latest Run"),
+    (len(df), "Total Jobs"),
+]
+for col, (val, label), (grad, icon) in zip([c1, c2, c3], kpi_values, CARD_GRADIENTS):
+    col.markdown(kpi_card(grad, icon, label, val), unsafe_allow_html=True)
+
+st.divider()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROW 2 — Job counts | Records src vs target
+# ══════════════════════════════════════════════════════════════════════════════
+c1, c2 = st.columns(2)
+
+with c1:
+    tbl_status = (
+        df.groupby(["table_name", "status"])
+        .size().reset_index(name="count")
+    )
+    fig2a = px.bar(
+        tbl_status, x="table_name", y="count",
+        color="status",
+        color_discrete_map=STATUS_COLORS,
+        barmode="group",
+        title="Job Count by Table & Status",
+        labels={"table_name": "Table", "count": "Jobs", "status": "Status"},
+    )
+    bar_layout(fig2a)
+    st.plotly_chart(fig2a, use_container_width=True)
+
+with c2:
+    rec = (
+        df.melt(
+            id_vars="table_name",
+            value_vars=["source_count", "target_count"],
+            var_name="Type", value_name="Records",
+        )
+        .assign(Type=lambda d: d["Type"].map(
+            {"source_count": "Source", "target_count": "Target"}
+        ))
+        .groupby(["table_name", "Type"], as_index=False)["Records"].sum()
+    )
+    fig2b = px.bar(
+        rec, x="table_name", y="Records",
+        color="Type", barmode="group",
+        title="Records: Source vs Target",
+        labels={"table_name": "Table", "Type": "Type"},
+        color_discrete_map={"Source": "#7367f0", "Target": "#ff9f43"},
+    )
+    bar_layout(fig2b)
+    st.plotly_chart(fig2b, use_container_width=True)
+
+st.divider()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROW 3 — Avg duration | Records over time
+# ══════════════════════════════════════════════════════════════════════════════
+c1, c2 = st.columns(2)
+
+with c1:
+    tbl_status = (
+        df.groupby(["table_name", "status"])
+        .size().reset_index(name="count")
+    )
+    fig2a = px.bar(
+        tbl_status, x="table_name", y="count",
+        color="status",
+        color_discrete_map=STATUS_COLORS,
+        barmode="group",
+        title="Job Count by Table & Status",
+        labels={"table_name": "Table", "count": "Jobs", "status": "Status"},
+    )
+    bar_layout(fig2a)
+    st.plotly_chart(fig2a, use_container_width=True, key="fig2a")
+
+with c2:
+    df_time = df.copy().sort_values("start_time")
+    time_rec = df_time.melt(
+        id_vars=["table_name", "start_time"],
+        value_vars=["source_count", "target_count"],
+        var_name="Type", value_name="Records",
+    ).assign(
+        Type=lambda d: d["Type"].map(
+            {"source_count": "Source", "target_count": "Target"}
+        )
+    )
+    fig2b = px.line(
+        time_rec,
+        x="start_time", y="Records",
+        color="table_name", line_dash="Type",
+        title="Records Over Time",
+        labels={"start_time": "Date", "table_name": "Table", "Type": "Type"},
+        markers=True,
+    )
+    line_layout(fig2b)
+    st.plotly_chart(fig2b, use_container_width=True, key="fig2b")
+st.divider()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROW 4 — Donut charts
+# ══════════════════════════════════════════════════════════════════════════════
+c1, c2, c3 = st.columns(3)
+error_df = df[df["error_message"].notna() & (df["error_message"].str.strip() != "")]
+
+with c1:
+    fig4a = make_donut(df["status"], "Job Status Distribution", STATUS_COLORS)
+    st.plotly_chart(fig4a, use_container_width=True)
+
+with c2:
+    if not error_df.empty:
+        # متن‌های خطا رو کوتاه کن تا label بریده نشه
+        err_short = error_df["error_message"].str.slice(0, 40)
+        fig4b = make_donut(err_short, "Error Type Distribution")
+        st.plotly_chart(fig4b, use_container_width=True)
+    else:
+        st.info("No errors recorded")
+
+with c3:
+    if not error_df.empty:
+        fig4c = make_donut(error_df["table_name"], "Errors by Table")
+        st.plotly_chart(fig4c, use_container_width=True)
+    else:
+        st.info("No errors recorded")
+
+st.divider()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ROW 5 — Log table
+# ══════════════════════════════════════════════════════════════════════════════
+st.markdown(
+    "<h3 style='font-size:1rem;font-weight:600;color:#5e5873;"
+    "margin-bottom:.5rem'>Recent Events</h3>",
+    unsafe_allow_html=True,
+)
+st.dataframe(
+    df.sort_values("start_time", ascending=False).head(20),
+    use_container_width=True,
+)
