@@ -5,7 +5,8 @@ def join_dataframe(
         df_1: pd.DataFrame,
         df_2: pd.DataFrame,
         columns: list[str],
-        join_type: str = "inner"
+        join_type: str = "inner",
+        suffixes: tuple = ("_left", "right")
 ) -> pd.DataFrame:
     """
        Join two DataFrames on a single key column.
@@ -21,7 +22,7 @@ def join_dataframe(
                - "outer"  : All rows from both DataFrames; unmatched rows filled with NaN.
                - "left"   : All rows from df_1, matched rows from df_2.
                - "right"  : All rows from df_2, matched rows from df_1.
-
+        suffixes tuple: Name of  suffixes columns
        Returns:
            pd.DataFrame: The merged result.
 
@@ -37,12 +38,12 @@ def join_dataframe(
            ... )
        """
     if join_type == "inner":
-        return pd.merge(df_1, df_2, left_on=columns[0], right_on=columns[1], how="inner")
+        return pd.merge(df_1, df_2, left_on=columns[0], right_on=columns[1], how="inner", suffixes=suffixes)
     elif join_type == "outer":
-        return pd.merge(df_1, df_2, left_on=columns[0], right_on=columns[1], how="outer")
+        return pd.merge(df_1, df_2, left_on=columns[0], right_on=columns[1], how="outer", suffixes=suffixes)
     elif join_type == "left":
-        return pd.merge(df_1, df_2, left_on=columns[0], right_on=columns[1], how="left")
+        return pd.merge(df_1, df_2, left_on=columns[0], right_on=columns[1], how="left", suffixes=suffixes)
     elif join_type == "right":
-        return pd.merge(df_1, df_2, left_on=columns[0], right_on=columns[1], how="right")
+        return pd.merge(df_1, df_2, left_on=columns[0], right_on=columns[1], how="right", suffixes=suffixes)
     else:
         raise ValueError(f"Unknown join type: '{join_type}'")

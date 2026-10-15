@@ -23,7 +23,7 @@ def read_control():
     PRIMARY_KEY = os.getenv("TARGET_BANK_PRIMARY_KEY")
 
     # ------------------------ connection ------------------------
-    sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE)
+    sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE, True)
     sql_connection.connect()
 
     # ------------------------ Generate query ------------------------

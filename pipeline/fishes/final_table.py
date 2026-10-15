@@ -6,11 +6,13 @@ import pandas as pd
 from tqdm.auto import tqdm
 from dotenv import load_dotenv
 # Modules =>
-from fishes_type import FISHES_TYPE
+from pipeline.fishes.fishes_type import FISHES_TYPE
 from src.transform.log import log_decorator
 from sql.query.dql.dql_query import DQLQuery
 from src.transform.join import join_dataframe
 from pipeline.fishes.bank import read_bank_table
+from pipeline.fishes.dates import read_dates_table
+from src.validation.safe_range import safe_range
 from src.transform.filter import filter_dataframe
 from pipeline.fishes.coding import read_coding_table
 from pipeline.fishes.brnach import read_branch_table
@@ -89,15 +91,16 @@ log_sql_connection.connect()
 )
 def final_table():
     # ------------------------ Get Max ID ------------------------
-    fishes_max_id = "0"
-    # fishes_max_id = read_control()
+    # fishes_max_id = "0"
+    fishes_max_id = read_control()
 
     # ------------------------ Generate query ------------------------
     # FISHES =>
     fishes_dql_query = DQLQuery(SOURCE_FISHES_DATABASE, SOURCE_FISHES_SCHEMA, SOURCE_FISHES_TABLE)
     fishes_dql_query.select(None)
+    fishes_dql_query.order_by(TARGET_FISHES_PRIMARY_KEY)
     condition_1 = fishes_dql_query.greater_than(SOURCE_FISHES_PRIMARY_KEY, fishes_max_id)
-    condition_2 = fishes_dql_query.equal("IS_MASTER", "1")
+    condition_2 = fishes_dql_query.equal("is_master", "1")
     conditions = fishes_dql_query.conditions([condition_1, condition_2])
     fishes_dql_query.where(conditions)
     fishes_query = fishes_dql_query.query
@@ -105,19 +108,18 @@ def final_table():
     fishes_total_dql_query = DQLQuery(SOURCE_FISHES_DATABASE, SOURCE_FISHES_SCHEMA, SOURCE_FISHES_TABLE)
     fishes_total_dql_query.select(["COUNT(*)"])
     condition_1 = fishes_total_dql_query.greater_than(SOURCE_FISHES_PRIMARY_KEY, fishes_max_id)
-    condition_2 = fishes_total_dql_query.equal("IS_MASTER", "1")
+    condition_2 = fishes_total_dql_query.equal("is_master", "1")
     conditions = fishes_total_dql_query.conditions([condition_1, condition_2])
     fishes_total_dql_query.where(conditions)
     total_query = fishes_total_dql_query.query
     total_record = get_total_count(source_sql_connection, total_query)
 
-    CHUNK_SIZE = 200
+    CHUNK_SIZE = 500
     total_chunks = total_record / CHUNK_SIZE
 
-    # ------------------------ ETL ------------------------
+    # ======================== ETL ========================
     coding_df = read_coding_table()
-
-    # Read fishes from source
+    # ------------------------ Read fishes from source ------------------------
     for chunk in tqdm(extract(source_sql_connection, fishes_query, CHUNK_SIZE),
                       total=int(total_chunks),
                       desc="ETL ► Fishes → final_table",
@@ -131,38 +133,67 @@ def final_table():
                               "[{elapsed}<{remaining}, {rate_fmt}]"
                       ),
                       smoothing=0.3):
-        global coding_df
-        chunk["insert_time2"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
-        chunk.map(lambda x: x.strip() if isinstance(x, str) else x, inplace=True)
+        # print("\n")
+        # print(chunk.to_string())
+        # ------------------------ Extract Min & Max for columns ------------------------
+        min_dates_1, max_dates_1 = safe_range(chunk["CREATION_CODING_DATE_ID"])
+        min_dates_2, max_dates_2 = safe_range(chunk["ALLOCATION_CODING_DATE_ID"])
+        min_corespondent, corespondent = safe_range(chunk["CORESPONDENT_BANK_ID"])
+        min_import_request, max_import_request = safe_range(chunk["IMPORT_REQUEST_ID"])
+        (min_import_request_organization,
+         max_import_request_organization) = safe_range(chunk["IMPORT_REQUEST_ORGANIZATION_ID"])
+        min_bank, max_bank = safe_range(chunk["BANK_ID"])
+        min_branch, max_branch = safe_range(chunk["BRANCH_ID"])
 
-        corespondent_df = read_corespondent_table(
-            min(chunk["CORESPONDENT_BANK_ID"]),
-            max(chunk["CORESPONDENT_BANK_ID"])
-        )
-        import_request_df = read_import_request_table(
-            min(chunk["IMPORT_REQUEST_ID"]),
-            max(chunk["IMPORT_REQUEST_ID"])
-        )
-        import_request_organization_df = read_import_request_organization_table(
-            min(chunk["IMPORT_REQUEST_ID"]),
-            max(chunk["IMPORT_REQUEST_ID"])
-        )
-        bank_df = read_bank_table(min(chunk["BANK_ID"]), max(chunk["BANK_ID"]))
-        branch_df = read_branch_table(min(chunk["BRANCH_ID"]), max(chunk["BRANCH_ID"]))
-        # If any crucial columns is null =>
+        # ------------------------ Strip String ------------------------
+        chunk = chunk.map(lambda x: x.strip() if isinstance(x, str) else x)
+
+        # ------------------------ Insert Time ------------------------
+        chunk["insert_time2"] = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+
+        # ------------------------ Read more tables ------------------------
+        dates1_df = read_dates_table(min_dates_1, max_dates_1)
+        dates2_df = read_dates_table(min_dates_2, max_dates_2)
+        corespondent_df = read_corespondent_table(min_corespondent, corespondent)
+        import_request_df = read_import_request_table(min_import_request, max_import_request)
+        import_request_organization_df = read_import_request_organization_table(min_import_request_organization,
+                                                                                max_import_request_organization)
+        bank_df = read_bank_table(min_bank, max_branch)
+        branch_df = read_branch_table(min_branch, max_branch)
+
+        # ------------------------ If any crucial columns is null ------------------------
         chunk_null = filter_any_null(chunk, CRUCIAL_COLUMNS)
         # TODO: Write to quarantine table
+        # print("*" * 100)
+        # print(chunk_null)
         del chunk_null
-
-        # If all crucial columns is not null =>
         chunk = filter_all_not_null(chunk, CRUCIAL_COLUMNS)
+
+        # ------------------------ Join between tables ------------------------
+        chunk = join_dataframe(
+            chunk,
+            dates1_df,
+            ["CREATION_CODING_DATE_ID", "coding_date_id"],
+            "left",
+            ("", "_date1")
+        )
+
+        chunk = join_dataframe(
+            chunk,
+            dates2_df,
+            ["ALLOCATION_CODING_DATE_ID", "coding_date_id"],
+            "left",
+            ("", "_date2")
+        )
+        print(0)
+
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CREATION_CODING_DATE_ID", "CODING_DATE_ID"],
             "left"
         )
-
+        print(1)
         chunk.drop_duplicates(inplace=True)
         chunk = join_dataframe(
             chunk,
@@ -170,7 +201,7 @@ def final_table():
             ["ALLOCATION_CODING_DATE_ID", "CODING_DATE_ID"],
             "left"
         )
-
+        print(2)
         chunk.drop_duplicates(inplace=True)
         chunk = join_dataframe(
             chunk,
@@ -178,15 +209,16 @@ def final_table():
             ["CORESPONDENT_BANK_ID", "CORESPONDENT_BANK_ID"],
             "left"
         )
-
+        print(3)
         chunk.drop_duplicates(inplace=True)
+        print(chunk.columns, "\n", bank_df.columns)
         chunk = join_dataframe(
             chunk,
             bank_df,
-            ["BANK_ID", "BANK_ID"],
+            ["BANK_ID", "bank_id"],
             "left"
         )
-
+        print(4)
         chunk.drop_duplicates(inplace=True)
         chunk = join_dataframe(
             chunk,
@@ -194,7 +226,7 @@ def final_table():
             ["BRANCH_ID", "BRANCH_ID"],
             "left"
         )
-
+        print(4)
         chunk.drop_duplicates(inplace=True)
         chunk = join_dataframe(
             chunk,
@@ -202,21 +234,21 @@ def final_table():
             ["CODING_ID", "NEW_FISHE_TYPE_CODING"],
             "left"
         )
-
+        print(5)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CODING_ID", "CIRCULAR_CODING_ID"],
             "left"
         )
-
+        print(6)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CODING_ID", "EXCHANGE_RATE_TYPE_CODING_ID"],
             "left"
         )
-
+        print(7)
         chunk['fishes_type'] = chunk['fishes_type'].map(FISHES_TYPE)
         chunk = join_dataframe(
             chunk,
@@ -224,27 +256,28 @@ def final_table():
             ["CODING_ID", "FISH_CURRENCY_CODING_ID"],
             "left"
         )
-
+        print(8)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CODING_ID", "NEW_TRADING_TYPE_CODING_ID"],
             "left"
         )
+        print(9)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CODING_ID", "NEW_GUARANTOR_TYPE_CODING_ID"],
             "left"
         )
-
+        print(10)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CODING_ID", "NEW_TERM_TYPE_CODING_ID"],
             "left"
         )
-
+        print(11)
         chunk.drop_duplicates(inplace=True)
         chunk = join_dataframe(
             chunk,
@@ -252,27 +285,28 @@ def final_table():
             ["CODING_ID", "NEW_LOAN_LOCATION_CODING_ID"],
             "left"
         )
+        print(12)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CODING_ID", "NEW_FOREIGN_EXCHANGE_LOCATION_CODING_ID"],
             "left"
         )
-
+        print(13)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CODING_ID", "NEW_EXCHANGE_RATE_TYPE_CODING_ID"],
             "left"
         )
-
+        print(14)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["CODING_ID", "PRIORITY_TYPE_CODING_ID"],
             "left"
         )
-
+        print(15)
         chunk.drop_duplicates(inplace=True)
         chunk = join_dataframe(
             chunk,
@@ -280,6 +314,7 @@ def final_table():
             ["IMPORT_REQUEST_ID", "IMPORT_REQUEST_ID"],
             "left"
         )
+        print(16)
         del import_request_df
         chunk = join_dataframe(
             chunk,
@@ -287,23 +322,26 @@ def final_table():
             ["IMPORT_REQUEST_ID", "IMPORT_REQUEST_ID"],
             "left"
         )
-
+        print(17)
         chunk = join_dataframe(
             chunk,
             coding_df,
             ["ORGANIZATION_CODING_ID", "CODING_ID"],
             "left"
         )
+        print(18)
         del import_request_organization_df
         del coding_df
         chunk.drop_duplicates(inplace=True)
-        chunk["کد مشتری"] = chunk["کد مشتری"].apply(
-            lambda x: chunk["NATIONAL_CODE"] if pd.notna(x) else chunk["NATIONAL_ID"])
+        chunk["کد مشتری"] = chunk["کد مشتری"].fillna(chunk["NATIONAL_CODE"]).fillna(chunk["NATIONAL_ID"])
+        chunk["تاریخ تخصیص"] = chunk["تاریخ تخصیص"].fillna(chunk["تاریخ ایجاد"])
+
         chunk["تاریخ تخصیص"] = chunk["تاریخ تخصیص"].apply(
             lambda x: chunk["تاریخ تخصیص"] if pd.notna(x) else chunk["تاریخ ایجاد"])
         chunk = filter_dataframe(chunk, "مبلغ معادل دلاری", [0], "gt")
         chunk["محل تامین ارز"] = chunk.apply(classify_source, axis=1)
+        # break
 
 
-if __name__ == "__min__":
+if __name__ == "__main__":
     final_table()

@@ -32,8 +32,8 @@ def read_bank_table(min_id: int, max_id: int) -> pd.DataFrame:
 
     # ------------------------ Generate query ------------------------
     bank_dql_query = DQLQuery(TARGET_BANK_DATABASE, TARGET_BANK_SCHEMA, TARGET_BANK_TABLE)
-    bank_dql_query.select(None)
-    condition = bank_dql_query.between("CORESPONDENT_BANK_ID", min_id, max_id)
+    bank_dql_query.select(["BANK_ID", "NAME"])
+    condition = bank_dql_query.between("bank_id", min_id, max_id)
     bank_dql_query.where(condition)
     bank_dql_query = bank_dql_query.build()
 

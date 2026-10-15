@@ -82,6 +82,7 @@ def final_table():
     # ------------------------ Generate query ------------------------
     dql_query = DQLQuery(SOURCE_BRANCH_DATABASE, SOURCE_BRANCH_SCHEMA, SOURCE_BRANCH_TABLE)
     dql_query.select(None)
+    dql_query.order_by(TARGET_BRANCH_PRIMARY_KEY)
     conditions = dql_query.greater_than(SOURCE_BRANCH_PRIMARY_KEY, max_id)
     dql_query.where(conditions)
     query = dql_query.query
@@ -93,7 +94,7 @@ def final_table():
     total_query = total_dql_query.query
     total_record = get_total_count(source_sql_connection, total_query)
 
-    CHUNK_SIZE = 200
+    CHUNK_SIZE = 50
     total_chunks = total_record / CHUNK_SIZE
     for chunk in tqdm(extract(source_sql_connection, query, CHUNK_SIZE),
                       total=int(total_chunks),

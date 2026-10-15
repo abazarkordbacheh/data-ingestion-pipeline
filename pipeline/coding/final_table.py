@@ -45,7 +45,7 @@ LOG_TABLE = os.getenv("LOG_TABLE")
 source_sql_connection = SQLConnection(
     SOURCE_CODING_HOST, SOURCE_CODING_PORT,
     SOURCE_CODING_USERNAME, SOURCE_CODING_PASSWORD,
-    SOURCE_CODING_DATABASE, False,
+    SOURCE_CODING_DATABASE, True,
 )
 
 target_sql_connection = SQLConnection(
@@ -83,6 +83,7 @@ def final_table():
     # ------------------------ Generate query ------------------------
     dql_query = DQLQuery(SOURCE_CODING_DATABASE, SOURCE_CODING_SCHEMA, SOURCE_CODING_TABLE)
     dql_query.select(None)
+    dql_query.order_by(TARGET_CODING_PRIMARY_KEY)
     conditions = dql_query.greater_than(SOURCE_CODING_PRIMARY_KEY, max_id)
     dql_query.where(conditions)
     query = dql_query.query

@@ -32,7 +32,7 @@ def read_branch_table(min_id: int, max_id: int) -> pd.DataFrame:
 
     # ------------------------ Generate query ------------------------
     branch_dql_query = DQLQuery(TARGET_BRANCH_DATABASE, TARGET_BRANCH_SCHEMA, TARGET_BRANCH_TABLE)
-    branch_dql_query.select(None)
+    branch_dql_query.select(["BRANCH_ID", "NAME"])
     condition = branch_dql_query.between("BRANCH_ID", min_id, max_id)
     branch_dql_query.where(condition)
     branch_dql_query = branch_dql_query.build()

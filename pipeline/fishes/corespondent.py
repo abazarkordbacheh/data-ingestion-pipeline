@@ -31,8 +31,8 @@ def read_corespondent_table(min_id:int, max_id:int)->pd.DataFrame:
     # CORESPONDENT_BANKS =>
     corespondent_banks_dql_query = DQLQuery(TARGET_CORESPONDENT_BANKS_DATABASE, TARGET_CORESPONDENT_BANKS_SCHEMA,
                                             TARGET_CORESPONDENT_BANKS_TABLE)
-    corespondent_banks_dql_query.select(None)
-    condition = corespondent_banks_dql_query.between("CODING_ID", min_id, max_id)
+    corespondent_banks_dql_query.select(["CORESPONDENT_BANK_ID", "CODE"])
+    condition = corespondent_banks_dql_query.between("correspondent_id", min_id, max_id)
     corespondent_banks_dql_query.where(condition)
     corespondent_banks_dql_query = corespondent_banks_dql_query.build()
 

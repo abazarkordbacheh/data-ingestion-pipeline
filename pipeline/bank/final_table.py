@@ -46,7 +46,7 @@ LOG_TABLE = os.getenv("LOG_TABLE")
 source_sql_connection = SQLConnection(
     SOURCE_BANK_HOST, SOURCE_BANK_PORT,
     SOURCE_BANK_USERNAME, SOURCE_BANK_PASSWORD,
-    SOURCE_BANK_DATABASE, False,
+    SOURCE_BANK_DATABASE, True,
 )
 
 target_sql_connection = SQLConnection(
@@ -84,6 +84,7 @@ def final_table():
     # ------------------------ Generate query ------------------------
     dql_query = DQLQuery(SOURCE_BANK_DATABASE, SOURCE_BANK_SCHEMA, SOURCE_BANK_TABLE)
     dql_query.select(None)
+    dql_query.order_by(TARGET_BANK_PRIMARY_KEY)
     conditions = dql_query.greater_than(SOURCE_BANK_PRIMARY_KEY, max_id)
     dql_query.where(conditions)
     query = dql_query.query
@@ -95,7 +96,7 @@ def final_table():
     total_query = total_dql_query.query
     total_record = get_total_count(source_sql_connection, total_query)
 
-    CHUNK_SIZE = 200
+    CHUNK_SIZE = 10
     total_chunks = total_record / CHUNK_SIZE
     for chunk in tqdm(extract(source_sql_connection, query, CHUNK_SIZE),
                       total=int(total_chunks),

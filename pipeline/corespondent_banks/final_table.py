@@ -84,6 +84,7 @@ def final_table():
     dql_query = DQLQuery(SOURCE_CORESPONDENT_BANKS_DATABASE, SOURCE_CORESPONDENT_BANKS_SCHEMA,
                          SOURCE_CORESPONDENT_BANKS_TABLE)
     dql_query.select(None)
+    dql_query.order_by(TARGET_CORESPONDENT_BANKS_PRIMARY_KEY)
     conditions = dql_query.greater_than(SOURCE_CORESPONDENT_BANKS_PRIMARY_KEY, max_id)
     dql_query.where(conditions)
     query = dql_query.query

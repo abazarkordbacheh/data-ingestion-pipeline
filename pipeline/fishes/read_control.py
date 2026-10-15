@@ -13,14 +13,14 @@ def read_control():
     # ------------------------ .env file ------------------------
     load_dotenv()
 
-    HOST = os.getenv("CONTROL_FISHES_HOST")
-    PORT = os.getenv("CONTROL_FISHES_PORT")
-    USER = os.getenv("CONTROL_FISHES_USER")
-    PASSWORD = os.getenv("CONTROL_FISHES_PASSWORD")
-    DATABASE = os.getenv("CONTROL_FISHES_DATABASE")
-    SCHEMA = os.getenv("CONTROL_FISHES_SCHEMA")
-    TABLE = os.getenv("CONTROL_FISHES_TABLE")
-    PRIMARY_KEY = os.getenv("CONTROL_FISHES_PRIMARY_KEY")
+    HOST = os.getenv("TARGET_FISHES_HOST")
+    PORT = os.getenv("TARGET_FISHES_PORT")
+    USER = os.getenv("TARGET_FISHES_USERNAME")
+    PASSWORD = os.getenv("TARGET_FISHES_PASSWORD")
+    DATABASE = os.getenv("TARGET_FISHES_DATABASE")
+    SCHEMA = os.getenv("TARGET_FISHES_SCHEMA")
+    TABLE = os.getenv("TARGET_FISHES_TABLE")
+    PRIMARY_KEY = os.getenv("TARGET_FISHES_PRIMARY_KEY")
 
     # ------------------------ connection ------------------------
     sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE)

@@ -1,4 +1,7 @@
+from sql import query
+
 import sqlalchemy
+from sqlalchemy.sql.elements import TextClause
 
 
 class DQLQuery:
@@ -32,7 +35,7 @@ class DQLQuery:
 
     def join(self, schema, table, first_column: str, second_column: str, join_type: str) -> None:
         """
-        Join tables (INNER/LEFT/RIGHT/FULL)
+        Join tables.sql (INNER/LEFT/RIGHT/FULL)
         :param schema: Schema name
         :param table: Table name
         :param first_column: column name in First table
@@ -114,7 +117,7 @@ class DQLQuery:
         """
         return sqlalchemy.text(
             f"""{self.query}
-            ORDER BY {column}"""
+            ORDER BY {column} DESC"""
         )
 
     def limit(self, limit: int) -> None:
@@ -127,11 +130,13 @@ class DQLQuery:
             f"""{self.query} LIMIT {limit}"""
         )
 
-    def build(self) -> sqlalchemy.text:
+    def build(self) -> TextClause:
         """
         Build query
         :return: sqlalchemy.text
         """
+        if isinstance(self.query, TextClause):
+            return self.query
         return sqlalchemy.text(self.query)
 
     # ---------------------- condition helpers ----------------------
@@ -231,7 +236,7 @@ class DQLQuery:
         :return: Between condition string
         """
         return sqlalchemy.text(
-            f"""{min_value}<={column}>= {max_value}"""
+            f"""{column} BETWEEN {min_value} AND  {max_value}"""
         )
 
     def conditions(self, list_condition) -> str:

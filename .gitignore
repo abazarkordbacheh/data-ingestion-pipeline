@@ -42,6 +42,7 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+dashboard/
 
 # Jupyter (اگه استفاده میکنی)
 .ipynb_checkpoints/

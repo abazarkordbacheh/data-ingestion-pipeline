@@ -44,7 +44,8 @@ def get_max_id(connection: SQLConnection, query: str) -> int:
     :return: Int max id
     """
     with connection.engine.connect() as connection:
-        max_id = int(connection.execute(sqlalchemy.text(query)).fetchone()[0])
+        result = connection.execute(sqlalchemy.text(query)).fetchone()
+        max_id = result[0] if result is not None else None
         if max_id is None:
             max_id = 0
         return max_id

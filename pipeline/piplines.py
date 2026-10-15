@@ -9,7 +9,7 @@ import threading
 # Modules =>
 from pipeline.bank.final_table import final_table as banks_final_table
 from pipeline.coding.final_table import final_table as coding_final_table
-from pipeline.fishes.final_table import final_table as fishes_final_table
+# from pipeline.fishes.final_table import final_table as fishes_final_table
 from pipeline.bransh.final_table import final_table as branches_final_table
 from pipeline.import_request.final_table import final_table as import_request_final_table
 from pipeline.corespondent_banks.final_table import final_table as corespondent_banks_final_table
@@ -44,7 +44,7 @@ def run_threaded(job_func):
 def make_etl_job(name: str, func):
     def etl_job():
         logger.info(f"Start ETL: {name}")
-        for attempt in range(1, 6):
+        for attempt in range(1, 2):
             try:
                 func()
                 logger.info(f"ETL {name} finished successfully")
@@ -58,19 +58,27 @@ def make_etl_job(name: str, func):
 # ------------------------ Jobs ------------------------
 etl_banks = make_etl_job("Banks", banks_final_table)
 etl_coding = make_etl_job("Coding", coding_final_table)
-etl_fishes = make_etl_job("Fishes", fishes_final_table)
+# etl_fishes = make_etl_job("Fishes", fishes_final_table)
 etl_branches = make_etl_job("Branches", branches_final_table)
 etl_import_request = make_etl_job("Import", import_request_final_table)
 etl_corespondent_banks = make_etl_job("Corespondent Banks", corespondent_banks_final_table)
 etl_import_request_organization = make_etl_job("ImportRequestOrganization", import_request_organization_final_table)
 
-schedule.every().day.at("02:00").do(run_threaded, etl_banks).tag("etl")
-schedule.every().day.at("02:00").do(run_threaded, etl_coding).tag("etl")
-schedule.every().day.at("02:00").do(run_threaded, etl_fishes).tag("etl")
-schedule.every().day.at("02:00").do(run_threaded, etl_branches).tag("etl")
-schedule.every().day.at("02:00").do(run_threaded, etl_import_request).tag("etl")
-schedule.every().day.at("02:30").do(run_threaded, etl_corespondent_banks).tag("etl")
-schedule.every().day.at("03:00").do(run_threaded, etl_import_request_organization).tag("etl")
+# schedule.every().day.at("17:02").do(run_threaded, etl_banks).tag("etl")
+# schedule.every().day.at("17:02").do(run_threaded, etl_coding).tag("etl")
+# schedule.every().day.at("15:44").do(run_threaded, etl_fishes).tag("etl")
+# schedule.every().day.at("17:02").do(run_threaded, etl_branches).tag("etl")
+# schedule.every().day.at("17:02").do(run_threaded, etl_import_request).tag("etl")
+# schedule.every().day.at("17:02").do(run_threaded, etl_corespondent_banks).tag("etl")
+# schedule.every().day.at("17:02").do(run_threaded, etl_import_request_organization).tag("etl")
+
+
+schedule.every().minutes.do(run_threaded, etl_banks).tag("etl")
+schedule.every().minutes.do(run_threaded, etl_coding).tag("etl")
+schedule.every().minutes.do(run_threaded, etl_branches).tag("etl")
+schedule.every().minutes.do(run_threaded, etl_import_request).tag("etl")
+schedule.every().minutes.do(run_threaded, etl_import_request_organization).tag("etl")
+schedule.every().minutes.do(run_threaded, etl_import_request_organization).tag("etl")
 
 logger.info("Scheduler started.")
 
