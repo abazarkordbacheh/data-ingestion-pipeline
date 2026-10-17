@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 import pandas as pd
@@ -22,7 +22,7 @@ def read_import_request_organization_table(min_id: int, max_id: int) -> pd.DataF
     TARGET_IMPORT_REQUEST_ORGANIZATION_TABLE = os.getenv("TARGET_IMPORT_REQUEST_ORGANIZATION_TABLE")
     TARGET_IMPORT_REQUEST_ORGANIZATION_PRIMARY_KEY = os.getenv("TARGET_IMPORT_REQUEST_ORGANIZATION_PRIMARY_KEY")
 
-    # ------------------------ connection ------------------------
+    # ------------------------ Connection ------------------------
     target_sql_connection = SQLConnection(
         TARGET_IMPORT_REQUEST_ORGANIZATION_HOST, TARGET_IMPORT_REQUEST_ORGANIZATION_PORT,
         TARGET_IMPORT_REQUEST_ORGANIZATION_USERNAME, TARGET_IMPORT_REQUEST_ORGANIZATION_PASSWORD

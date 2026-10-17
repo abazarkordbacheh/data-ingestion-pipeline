@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 from dotenv import load_dotenv
@@ -22,7 +22,7 @@ def read_control():
     TABLE = os.getenv("TARGET_BANK_TABLE")
     PRIMARY_KEY = os.getenv("TARGET_BANK_PRIMARY_KEY")
 
-    # ------------------------ connection ------------------------
+    # ------------------------ Connection ------------------------
     sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE, True)
     sql_connection.connect()
 

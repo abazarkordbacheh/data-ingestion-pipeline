@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 import pandas as pd
@@ -22,7 +22,7 @@ def read_branch_table(min_id: int, max_id: int) -> pd.DataFrame:
     TARGET_BRANCH_TABLE = os.getenv("TARGET_BRANCH_TABLE")
     TARGET_BRANCH_PRIMARY_KEY = os.getenv("TARGET_BRANCH_PRIMARY_KEY")
 
-    # ------------------------ connection ------------------------
+    # ------------------------ Connection ------------------------
     target_sql_connection = SQLConnection(
         TARGET_BRANCH_HOST, TARGET_BRANCH_PORT,
         TARGET_BRANCH_USERNAME, TARGET_BRANCH_PASSWORD

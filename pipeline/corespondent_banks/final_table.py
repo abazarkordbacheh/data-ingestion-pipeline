@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 import datetime
@@ -41,7 +41,7 @@ LOG_DATABASE = os.getenv("LOG_DATABASE")
 LOG_SCHEMA = os.getenv("LOG_SCHEMA")
 LOG_TABLE = os.getenv("LOG_TABLE")
 
-# ------------------------ connection ------------------------
+# ------------------------ Connection ------------------------
 source_sql_connection = SQLConnection(
     SOURCE_CORESPONDENT_BANKS_HOST, SOURCE_CORESPONDENT_BANKS_PORT,
     SOURCE_CORESPONDENT_BANKS_USERNAME, SOURCE_CORESPONDENT_BANKS_PASSWORD,

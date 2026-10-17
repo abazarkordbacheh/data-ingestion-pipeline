@@ -1,8 +1,13 @@
-from src.connection.base import BaseConnection
-import urllib.parse
-import sqlalchemy
+# ------------------------ Modules ------------------------
+# Libraries =>
 import pymssql
+import sqlalchemy
+import urllib.parse
+# Modules = >
+from src.connection.base import BaseConnection
 
+
+# ------------------------ Class SQL Server Connection ------------------------
 
 class SQLConnection(BaseConnection):
     """

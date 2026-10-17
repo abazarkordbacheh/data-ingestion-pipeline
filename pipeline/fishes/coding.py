@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 import pandas as pd
@@ -21,7 +21,7 @@ def read_coding_table() -> pd.DataFrame:
     TARGET_CODING_SCHEMA = os.getenv("TARGET_CODING_SCHEMA")
     TARGET_CODING_TABLE = os.getenv("TARGET_CODING_TABLE")
     TARGET_CODING_PRIMARY_KEY = os.getenv("TARGET_CODING_PRIMARY_KEY")
-    # ------------------------ connection ------------------------
+    # ------------------------ Connection ------------------------
     target_sql_connection = SQLConnection(
         TARGET_CODING_HOST, TARGET_CODING_PORT,
         TARGET_CODING_USERNAME, TARGET_CODING_PASSWORD

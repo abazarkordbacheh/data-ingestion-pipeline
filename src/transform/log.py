@@ -1,8 +1,11 @@
+# ------------------------ Modules ------------------------
+# Libraries = >
 import functools
-from datetime import datetime
 import sqlalchemy
+from datetime import datetime
 
 
+# ------------------------ Logger Function | Decorator ------------------------
 def log_decorator(source_table_name, target_table_name, source_schema_name, target_schema_name,
                   source_engine, target_engine, log_engine=None):
     def decorator(func):
@@ -75,4 +78,3 @@ def log_decorator(source_table_name, target_table_name, source_schema_name, targ
         return wrapper
 
     return decorator
-

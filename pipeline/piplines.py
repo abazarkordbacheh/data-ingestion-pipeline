@@ -34,6 +34,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
+
 # ------------------------ Threading ------------------------
 def run_threaded(job_func):
     thread = threading.Thread(target=job_func)
@@ -54,6 +55,7 @@ def make_etl_job(name: str, func):
         logger.error(f"ETL {name} failed after 5 attempts")
 
     return etl_job
+
 
 # ------------------------ Jobs ------------------------
 etl_banks = make_etl_job("Banks", banks_final_table)

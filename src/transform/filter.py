@@ -1,6 +1,9 @@
+# ------------------------ Modules ------------------------
+# Libraries = >
 import pandas as pd
 
 
+# ------------------------ Filter Function ------------------------
 def filter_dataframe(
         df: pd.DataFrame,
         column: str,

@@ -1,6 +1,9 @@
+# ------------------------ Modules ------------------------
+# Libraries =>
 from abc import ABC, abstractmethod
 
 
+# ------------------------ Class Base Connection ------------------------
 class BaseConnection(ABC):
     @abstractmethod
     def __init__(self):

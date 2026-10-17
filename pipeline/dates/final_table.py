@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 import datetime
@@ -42,7 +42,7 @@ LOG_DATABASE = os.getenv("LOG_DATABASE")
 LOG_SCHEMA = os.getenv("LOG_SCHEMA")
 LOG_TABLE = os.getenv("LOG_TABLE")
 
-# ------------------------ connection ------------------------
+# ------------------------ Connection ------------------------
 source_sql_connection = SQLConnection(
     SOURCE_DATES_HOST, SOURCE_DATES_PORT,
     SOURCE_DATES_USERNAME, SOURCE_DATES_PASSWORD,

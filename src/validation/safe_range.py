@@ -1,6 +1,9 @@
+# ------------------------ Modules ------------------------
+# Libraries = >
 import pandas as pd
 
 
+# ------------------------ Get Safe Range Data Function ------------------------
 def safe_range(series: pd.Series) -> tuple[int, int]:
     """
     Extract safe range from a series.

@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 import pandas as pd
@@ -9,7 +9,7 @@ from src.extract.sql_extractor import full_extract
 from src.connection.sql_connection import SQLConnection
 
 
-def read_corespondent_table(min_id:int, max_id:int)->pd.DataFrame:
+def read_corespondent_table(min_id: int, max_id: int) -> pd.DataFrame:
     # ------------------------ .env file ------------------------
     load_dotenv()
 
@@ -21,7 +21,7 @@ def read_corespondent_table(min_id:int, max_id:int)->pd.DataFrame:
     TARGET_CORESPONDENT_BANKS_SCHEMA = os.getenv("TARGET_CORESPONDENT_BANKS_SCHEMA")
     TARGET_CORESPONDENT_BANKS_TABLE = os.getenv("TARGET_CORESPONDENT_BANKS_TABLE")
     TARGET_CORESPONDENT_BANKS_PRIMARY_KEY = os.getenv("TARGET_CORESPONDENT_BANKS_PRIMARY_KEY")
-    # ------------------------ connection ------------------------
+    # ------------------------ Connection ------------------------
     target_sql_connection = SQLConnection(
         TARGET_CORESPONDENT_BANKS_HOST, TARGET_CORESPONDENT_BANKS_PORT,
         TARGET_CORESPONDENT_BANKS_USERNAME, TARGET_CORESPONDENT_BANKS_PASSWORD

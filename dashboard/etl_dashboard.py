@@ -1,17 +1,21 @@
-import streamlit as st
-import pandas as pd
-from dotenv import load_dotenv
+# ------------------------ Modules ------------------------
+# Libraries =>
 import sys, os
+import pandas as pd
+import streamlit as st
 import plotly.express as px
+from dotenv import load_dotenv
 import plotly.graph_objects as go
 
+# Base Path =>
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+# Modules =>
 from src.connection.sql_connection import SQLConnection
 
-# ── page config ────────────────────────────────────────────────────────────────
+# ------------------------Page Config ------------------------
 st.set_page_config(page_title="DataPulse", layout="wide", page_icon="⚡")
 
-# ── CSS ────────────────────────────────────────────────────────────────────────
+# ------------------------ CSS ------------------------
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -67,7 +71,7 @@ hr { border-color: #ebe9f1; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── constants ──────────────────────────────────────────────────────────────────
+# ------------------------ Constants ------------------------
 STATUS_COLORS = {
     "success": "#28c76f",
     "failed": "#ea5455",
@@ -81,9 +85,10 @@ CARD_GRADIENTS = [
     ("linear-gradient(135deg,#ff9f43,#ffb976)", "📦"),
 ]
 
-# ── تنظیمات پایه چارت‌ها ─────────────────────────────────────────────────────
-# مهم: paper_bgcolor و plot_bgcolor باید rgba(0,0,0,0) باشن
-# تا رنگ کارت از CSS بیاد؛ هیچ‌وقت "white" یا "#fff" نذارید
+# ------------------------ Basic chart settings ------------------------
+
+# Important: paper_bgcolor and plot_bgcolor must be rgba(0,0,0,0)
+# Get the color from CSS; never use "white" or "#fff"
 BASE_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="rgba(0,0,0,0)",
@@ -92,7 +97,7 @@ BASE_LAYOUT = dict(
     title_font=dict(size=14, color="#3d3b8e", family="Inter"),
 )
 
-# ── env & connection ───────────────────────────────────────────────────────────
+# ------------------------ env & Connection ------------------------
 load_dotenv()
 LOG_HOST = os.getenv("LOG_HOST")
 LOG_PORT = int(os.getenv("LOG_PORT", 1433))
@@ -130,7 +135,7 @@ def load_data() -> pd.DataFrame:
 
 df_raw = load_data()
 
-# ── sidebar ────────────────────────────────────────────────────────────────────
+# ------------------------ Sidebar ------------------------
 with st.sidebar:
     st.markdown("## ⚡ DataPulse")
     st.markdown("---")
@@ -151,13 +156,13 @@ with st.sidebar:
         st.cache_data.clear()
         st.rerun()
 
-# ── filtered df ───────────────────────────────────────────────────────────────
+# ------------------------ Filtered df ------------------------
 df = df_raw[df_raw["table_name"].isin(selected_tables)].copy()
 
 
-# ── helpers ────────────────────────────────────────────────────────────────────
+# ------------------------ Helpers ------------------------
 def bar_layout(fig: go.Figure, height: int = 340) -> go.Figure:
-    """استایل یکپارچه برای bar chart‌ها"""
+    """Unified styling for bar charts"""
     fig.update_layout(
         **BASE_LAYOUT,
         height=height,
@@ -183,7 +188,7 @@ def bar_layout(fig: go.Figure, height: int = 340) -> go.Figure:
 
 
 def line_layout(fig: go.Figure, height: int = 340) -> go.Figure:
-    """استایل یکپارچه برای line chart‌ها با legend خارج"""
+    """Unified styling for line charts with external legend"""
     fig.update_layout(
         **BASE_LAYOUT,
         height=height,
@@ -213,21 +218,21 @@ def line_layout(fig: go.Figure, height: int = 340) -> go.Figure:
 
 def make_donut(series: pd.Series, title: str, color_map: dict = None) -> go.Figure:
     """
-    ساخت donut chart با رنگ‌های درست.
+    Making a donut chart with the right colors.
 
-    علت سیاه‌شدن قبلی: plotly وقتی color_discrete_map یا
-    color_discrete_sequence نداشته باشه از پالت پیش‌فرض استفاده می‌کنه
-    که گاهی با پس‌زمینه شفاف تداخل داره.
-    اینجا هر بار یه پالت صریح می‌دیم.
+    Reason for the previous blackout: plotly uses the default palette when it doesn't have a color_discrete_map or
+    color_discrete_sequence,
+    which sometimes interferes with transparent backgrounds.
+    Here we give an explicit palette every time.
     """
     counts = series.value_counts().reset_index()
     counts.columns = ["label", "count"]
 
     if color_map:
-        # ترتیب رنگ‌ها رو طبق label از color_map بگیر
+        # Get the order of colors according to label from color_map
         colors = [color_map.get(lbl, "#cccccc") for lbl in counts["label"]]
     else:
-        # پالت کیفی با تنوع کافی — نه پیش‌فرض plotly
+        # Quality palette with enough variety — not the plotly default
         palette = [
             "#7367f0", "#28c76f", "#ff9f43", "#ea5455",
             "#00cfe8", "#ff6f61", "#6fcf97", "#f2c94c",
@@ -269,18 +274,14 @@ def kpi_card(gradient: str, icon: str, label: str, value) -> str:
     </div>"""
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ROW 0 — عنوان
-# ══════════════════════════════════════════════════════════════════════════════
+# ------------------------ ROW 0 — Title ------------------------
 st.markdown(
     "<h1 style='font-size:1.6rem;font-weight:700;color:#3d3b8e;"
     "margin-bottom:.25rem'>DataPulse — ETL Monitor</h1>",
     unsafe_allow_html=True,
 )
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ROW 1 — KPI cards
-# ══════════════════════════════════════════════════════════════════════════════
+# ------------------------ ROW 1 — KPI cards ------------------------
 c1, c2, c3 = st.columns(3)
 
 latest_run = df["start_time"].max()
@@ -296,9 +297,7 @@ for col, (val, label), (grad, icon) in zip([c1, c2, c3], kpi_values, CARD_GRADIE
 
 st.divider()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ROW 2 — Job counts | Records src vs target
-# ══════════════════════════════════════════════════════════════════════════════
+# ------------------------ ROW 2 — Job counts | Records src vs target ------------------------
 c1, c2 = st.columns(2)
 
 with c1:
@@ -341,53 +340,47 @@ with c2:
 
 st.divider()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ROW 3 — Avg duration | Records over time
-# ══════════════════════════════════════════════════════════════════════════════
-c1, c2 = st.columns(2)
-
+# ------------------------ ROW 3 — Avg duration | Records over time ------------------------
 with c1:
-    tbl_status = (
-        df.groupby(["table_name", "status"])
-        .size().reset_index(name="count")
+    avg_dur = (
+        df.groupby("table_name")["duration_seconds"]
+        .mean().reset_index(name="Avg Duration (sec)")
     )
-    fig2a = px.bar(
-        tbl_status, x="table_name", y="count",
-        color="status",
-        color_discrete_map=STATUS_COLORS,
-        barmode="group",
-        title="Job Count by Table & Status",
-        labels={"table_name": "Table", "count": "Jobs", "status": "Status"},
+    fig3a = px.bar(
+        avg_dur, x="table_name", y="Avg Duration (sec)",
+        title="Average Job Duration",
+        labels={"table_name": "Table"},
+        color_discrete_sequence=["#7367f0"],
     )
-    bar_layout(fig2a)
-    st.plotly_chart(fig2a, use_container_width=True, key="fig2a")
+    bar_layout(fig3a)
+    st.plotly_chart(fig3a, use_container_width=True, key="fig3a")
 
 with c2:
-    df_time = df.copy().sort_values("start_time")
-    time_rec = df_time.melt(
-        id_vars=["table_name", "start_time"],
-        value_vars=["source_count", "target_count"],
-        var_name="Type", value_name="Records",
-    ).assign(
-        Type=lambda d: d["Type"].map(
-            {"source_count": "Source", "target_count": "Target"}
+    df_time = df.copy()
+    df_time["date"] = df_time["start_time"].dt.date
+    time_rec = (
+        df_time.melt(
+            id_vars=["table_name", "date"],
+            value_vars=["source_count", "target_count"],
+            var_name="Type", value_name="Records",
         )
+        .groupby(["date", "table_name", "Type"], as_index=False)["Records"].sum()
     )
-    fig2b = px.line(
-        time_rec,
-        x="start_time", y="Records",
+    time_rec["Type"] = time_rec["Type"].map(
+        {"source_count": "Source", "target_count": "Target"}
+    )
+    fig3b = px.line(
+        time_rec, x="date", y="Records",
         color="table_name", line_dash="Type",
         title="Records Over Time",
-        labels={"start_time": "Date", "table_name": "Table", "Type": "Type"},
+        labels={"date": "Date", "table_name": "Table"},
         markers=True,
     )
-    line_layout(fig2b)
-    st.plotly_chart(fig2b, use_container_width=True, key="fig2b")
+    line_layout(fig3b)
+    st.plotly_chart(fig3b, use_container_width=True, key="fig3b")
 st.divider()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ROW 4 — Donut charts
-# ══════════════════════════════════════════════════════════════════════════════
+# ------------------------ ROW 4 — Donut charts ------------------------
 c1, c2, c3 = st.columns(3)
 error_df = df[df["error_message"].notna() & (df["error_message"].str.strip() != "")]
 
@@ -397,7 +390,7 @@ with c1:
 
 with c2:
     if not error_df.empty:
-        # متن‌های خطا رو کوتاه کن تا label بریده نشه
+        # Truncate error texts so that the label is not cut off
         err_short = error_df["error_message"].str.slice(0, 40)
         fig4b = make_donut(err_short, "Error Type Distribution")
         st.plotly_chart(fig4b, use_container_width=True)
@@ -413,9 +406,7 @@ with c3:
 
 st.divider()
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ROW 5 — Log table
-# ══════════════════════════════════════════════════════════════════════════════
+# ------------------------ ROW 5 — Log table ------------------------
 st.markdown(
     "<h3 style='font-size:1rem;font-weight:600;color:#5e5873;"
     "margin-bottom:.5rem'>Recent Events</h3>",

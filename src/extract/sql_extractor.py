@@ -1,9 +1,13 @@
-from typing import Generator
-from src.connection.sql_connection import SQLConnection
-import pandas as pd
+# ------------------------ Modules ------------------------
+# Libraries = >
 import sqlalchemy
+import pandas as pd
+from typing import Generator
+# Modules = >
+from src.connection.sql_connection import SQLConnection
 
 
+# ------------------------ Extract Functions ------------------------
 def full_extract(connection: SQLConnection, query: str) -> pd.DataFrame | None:
     """
     Extract data from SQL Server

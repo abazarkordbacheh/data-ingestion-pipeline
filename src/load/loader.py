@@ -1,7 +1,11 @@
+# ------------------------ Modules ------------------------
+# Libraries = >
 import pandas as pd
+# Modules = >
 from src.connection.sql_connection import SQLConnection
 
 
+# ------------------------ Loading Function ------------------------
 def load(df: pd.DataFrame, connection: SQLConnection, table: str, schema: str) -> None:
     """
     Loads DataFrame into SQL table

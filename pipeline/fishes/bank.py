@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 import pandas as pd
@@ -22,7 +22,7 @@ def read_bank_table(min_id: int, max_id: int) -> pd.DataFrame:
     TARGET_BANK_TABLE = os.getenv("TARGET_BANK_TABLE")
     TARGET_BANK_PRIMARY_KEY = os.getenv("TARGET_BANK_PRIMARY_KEY")
 
-    # ------------------------ connection ------------------------
+    # ------------------------ Connection ------------------------
     target_sql_connection = SQLConnection(
         TARGET_BANK_HOST, TARGET_BANK_PORT,
         TARGET_BANK_USERNAME, TARGET_BANK_PASSWORD

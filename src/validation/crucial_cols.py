@@ -1,6 +1,9 @@
+# ------------------------ Modules ------------------------
+# Libraries = >
 import pandas as pd
 
 
+# ------------------------ Crucial Columns Filter Function ------------------------
 def filter_all_not_null(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     """
     Rows where all given columns have values (none are null)

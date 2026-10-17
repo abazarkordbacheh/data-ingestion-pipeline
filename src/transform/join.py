@@ -1,6 +1,9 @@
+# ------------------------ Modules ------------------------
+# Libraries = >
 import pandas as pd
 
 
+# ------------------------ Join Function ------------------------
 def join_dataframe(
         df_1: pd.DataFrame,
         df_2: pd.DataFrame,

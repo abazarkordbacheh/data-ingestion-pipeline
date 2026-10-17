@@ -1,8 +1,10 @@
-from sql import query
-
+# ------------------------ Modules ------------------------
+# Libraries =>
 import sqlalchemy
 from sqlalchemy.sql.elements import TextClause
 
+
+# ------------------------ Class DQL Query ------------------------
 
 class DQLQuery:
     """

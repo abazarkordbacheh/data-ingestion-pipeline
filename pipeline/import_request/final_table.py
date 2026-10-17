@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import re
 import os
@@ -42,10 +42,10 @@ LOG_DATABASE = os.getenv("LOG_DATABASE")
 LOG_SCHEMA = os.getenv("LOG_SCHEMA")
 LOG_TABLE = os.getenv("LOG_TABLE")
 
-# ------------------------ control chars pattern ------------------------
+# ------------------------ Control Chars Pattern ------------------------
 _CONTROL_CHARS = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
 
-# ------------------------ connection ------------------------
+# ------------------------ Connection ------------------------
 source_sql_connection = SQLConnection(
     SOURCE_IMPORT_REQUEST_HOST, SOURCE_IMPORT_REQUEST_PORT,
     SOURCE_IMPORT_REQUEST_USERNAME, SOURCE_IMPORT_REQUEST_PASSWORD,

@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 from dotenv import load_dotenv
@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from sql.query.dql.dql_query import DQLQuery
 from src.extract.sql_extractor import get_max_id
 from src.connection.sql_connection import SQLConnection
+
 
 # ------------------------ read_control ------------------------
 def read_control():
@@ -21,7 +22,7 @@ def read_control():
     TABLE = os.getenv("TARGET_CODING_TABLE")
     PRIMARY_KEY = os.getenv("TARGET_CODING_PRIMARY_KEY")
 
-    # ------------------------ connection ------------------------
+    # ------------------------ Connection ------------------------
     sql_connection = SQLConnection(HOST, int(PORT), USER, PASSWORD, DATABASE)
     sql_connection.connect()
 
@@ -31,6 +32,6 @@ def read_control():
     query = dql_query.query
 
     # ------------------------ Get max id ------------------------
-    max_id = get_max_id(sql_connection,query)
+    max_id = get_max_id(sql_connection, query)
 
     return max_id

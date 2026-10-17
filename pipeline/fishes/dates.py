@@ -1,4 +1,4 @@
-# ------------------------ modules ------------------------
+# ------------------------ Modules ------------------------
 # Libraries =>
 import os
 import pandas as pd
@@ -22,7 +22,7 @@ def read_dates_table(min_id: int, max_id: int) -> pd.DataFrame:
     TARGET_DATES_TABLE = os.getenv("TARGET_DATES_TABLE")
     TARGET_DATES_PRIMARY_KEY = os.getenv("TARGET_DATES_PRIMARY_KEY")
 
-    # ------------------------ connection ------------------------
+    # ------------------------ Connection ------------------------
     target_sql_connection = SQLConnection(
         TARGET_DATES_HOST, TARGET_DATES_PORT,
         TARGET_DATES_USERNAME, TARGET_DATES_PASSWORD
